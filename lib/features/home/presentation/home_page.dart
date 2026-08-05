@@ -114,55 +114,17 @@ class _DashboardBody extends StatelessWidget {
         ? 'مساء الخير'
         : 'مساء النور';
     return ListView(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 108),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 112),
       children: [
-        Row(
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF19B98E), Color(0xFF087F6E)],
-                ),
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x3320C997), blurRadius: 16),
-                ],
-              ),
-              child: Text(
-                name.isEmpty ? 'N' : name.characters.first,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(greeting, style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                    name.isEmpty ? 'عميل PetroB' : name,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            IconButton.filledTonal(
-              onPressed: () {},
-              tooltip: 'الإشعارات',
-              icon: const Badge(child: Icon(Icons.notifications_none_rounded)),
-            ),
-          ],
+        _WelcomeHeader(
+          name: name.isEmpty ? 'عميل PetroB' : name,
+          greeting: greeting,
+          initial: name.isEmpty ? 'P' : name.characters.first,
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         BrandedWalletCard(
           available: money(dashboard.wallet['available']),
           reserved: money(dashboard.wallet['held']),
@@ -170,80 +132,95 @@ class _DashboardBody extends StatelessWidget {
               'آخر تحديث ${_shortDate(dashboard.wallet['updatedAt'])}',
           onTopUp: () => context.push(AppRoutes.walletTopUp),
         ),
-        const SizedBox(height: 22),
-        const _SectionTitle('اختصارات سريعة'),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            _Quick(
-              Icons.local_gas_station,
-              'ابدأ التعبئة',
-              () => context.push(AppRoutes.scan),
+        const SizedBox(height: 24),
+        _FuelingAction(onTap: () => context.push(AppRoutes.scan)),
+        const SizedBox(height: 26),
+        const _SectionTitle(
+          'خدماتك السريعة',
+          subtitle: 'كل ما تحتاجه على بُعد خطوة',
+        ),
+        const SizedBox(height: 14),
+        _QuickActions(
+          actions: [
+            _QuickActionData(
+              icon: Icons.near_me_rounded,
+              label: 'المحطات',
+              caption: 'الأقرب إليك',
+              color: const Color(0xFF16A085),
+              onTap: () => context.go(AppRoutes.stations),
             ),
-            _Quick(
-              Icons.qr_code_scanner,
-              'مسح QR',
-              () => context.push(AppRoutes.scan),
+            _QuickActionData(
+              icon: Icons.directions_car_filled_rounded,
+              label: 'مركباتي',
+              caption: 'إدارة المركبات',
+              color: const Color(0xFF3B82F6),
+              onTap: () => context.push(AppRoutes.vehicles),
             ),
-            _Quick(
-              Icons.near_me_outlined,
-              'المحطات القريبة',
-              () => context.go(AppRoutes.stations),
+            _QuickActionData(
+              icon: Icons.receipt_long_rounded,
+              label: 'العمليات',
+              caption: 'السجل الكامل',
+              color: const Color(0xFFF59E0B),
+              onTap: () => context.push(AppRoutes.transactions),
             ),
-            _Quick(
-              Icons.directions_car_outlined,
-              'إضافة مركبة',
-              () => context.push(AppRoutes.vehicles),
-            ),
-            _Quick(
-              Icons.receipt_long_outlined,
-              'سجل العمليات',
-              () => context.push(AppRoutes.transactions),
+            _QuickActionData(
+              icon: Icons.add_card_rounded,
+              label: 'شحن الرصيد',
+              caption: 'إضافة رصيد',
+              color: const Color(0xFF8B5CF6),
+              onTap: () => context.push(AppRoutes.walletTopUp),
             ),
           ],
         ),
-        const SizedBox(height: 22),
-        const _SectionTitle('ملخص آخر 30 يومًا'),
-        const SizedBox(height: 12),
+        const SizedBox(height: 28),
+        const _SectionTitle(
+          'ملخص نشاطك',
+          subtitle: 'نظرة سريعة على آخر 30 يومًا',
+        ),
+        const SizedBox(height: 14),
         GridView.count(
           crossAxisCount: MediaQuery.sizeOf(context).width > 600 ? 4 : 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
-          childAspectRatio: 1.70,
+          childAspectRatio: MediaQuery.sizeOf(context).width < 370 ? 1.35 : 1.5,
           children: [
             _Metric(
               'التعبئات',
               '${dashboard.summary['totalFuelings']}',
               Icons.ev_station_outlined,
+              const Color(0xFF16A085),
             ),
             _Metric(
               'اللترات',
               (dashboard.summary['totalLiters'] as num).toStringAsFixed(3),
               Icons.water_drop_outlined,
+              const Color(0xFF3B82F6),
             ),
             _Metric(
               'الإنفاق',
               money(dashboard.summary['totalSpent']),
               Icons.payments_outlined,
+              const Color(0xFFF59E0B),
             ),
             _Metric(
               'متوسط العملية',
               money(dashboard.summary['averageTransaction']),
               Icons.analytics_outlined,
+              const Color(0xFF8B5CF6),
             ),
             _Metric(
               'المحطات',
               '${dashboard.summary['stationsUsed']}',
               Icons.location_on_outlined,
+              const Color(0xFFEF6262),
             ),
             _Metric(
               'المركبات',
               '${dashboard.summary['vehiclesUsed']}',
               Icons.directions_car_outlined,
+              const Color(0xFF0EA5E9),
             ),
           ],
         ),
@@ -427,119 +404,430 @@ class _DashboardBody extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-  final String text;
+class _WelcomeHeader extends StatelessWidget {
+  const _WelcomeHeader({
+    required this.name,
+    required this.greeting,
+    required this.initial,
+  });
+
+  final String name;
+  final String greeting;
+  final String initial;
+
   @override
-  Widget build(BuildContext c) => Row(
-    children: [
-      Container(
-        width: 4,
-        height: 18,
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Row(
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF25D7A2), Color(0xFF087F6E)],
+            ),
+            borderRadius: BorderRadius.circular(17),
+            border: Border.all(color: Colors.white.withValues(alpha: .18)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x3320C997),
+                blurRadius: 18,
+                offset: Offset(0, 7),
+              ),
+            ],
+          ),
+          child: Text(
+            initial,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                greeting,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Material(
+          color: isDark
+              ? const Color(0xFF102936)
+              : Colors.white.withValues(alpha: .9),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+            side: BorderSide(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: .7),
+            ),
+          ),
+          child: IconButton(
+            onPressed: () {},
+            tooltip: 'الإشعارات',
+            icon: Badge(
+              smallSize: 7,
+              backgroundColor: const Color(0xFFFFB547),
+              child: Icon(
+                Icons.notifications_none_rounded,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FuelingAction extends StatelessWidget {
+  const _FuelingAction({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Ink(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
         decoration: BoxDecoration(
-          color: Theme.of(c).colorScheme.primary,
-          borderRadius: BorderRadius.circular(8),
+          gradient: const LinearGradient(
+            begin: AlignmentDirectional.topStart,
+            end: AlignmentDirectional.bottomEnd,
+            colors: [Color(0xFF143E4B), Color(0xFF0A7668)],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withValues(alpha: .1)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x2915C795),
+              blurRadius: 22,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            PositionedDirectional(
+              end: -18,
+              child: Icon(
+                Icons.local_gas_station_rounded,
+                color: Colors.white.withValues(alpha: .055),
+                size: 112,
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: .13),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: .14),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.qr_code_scanner_rounded,
+                    size: 28,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'جاهز للتعبئة؟',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'امسح رمز المحطة وابدأ فورًا',
+                        style: TextStyle(
+                          color: Color(0xFFC8EDE5),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Color(0xFF087F6E),
+                    size: 21,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-      const SizedBox(width: 9),
-      Text(
-        text,
-        style: Theme.of(
-          c,
-        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+    ),
+  );
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text, {this.subtitle});
+  final String text;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext c) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Container(
+            width: 5,
+            height: 21,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF25D7A2), Color(0xFF087F6E)],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(c).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -.2,
+              ),
+            ),
+          ),
+        ],
       ),
+      if (subtitle != null) ...[
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: 15),
+          child: Text(
+            subtitle!,
+            style: Theme.of(c).textTheme.bodySmall?.copyWith(
+              color: Theme.of(c).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
     ],
   );
 }
 
-class _Quick extends StatelessWidget {
-  const _Quick(this.icon, this.label, this.tap);
+class _QuickActionData {
+  const _QuickActionData({
+    required this.icon,
+    required this.label,
+    required this.caption,
+    required this.color,
+    required this.onTap,
+  });
+
   final IconData icon;
   final String label;
-  final VoidCallback tap;
+  final String caption;
+  final Color color;
+  final VoidCallback onTap;
+}
+
+class _QuickActions extends StatelessWidget {
+  const _QuickActions({required this.actions});
+
+  final List<_QuickActionData> actions;
+
   @override
-  Widget build(BuildContext c) => SizedBox(
-    width: (MediaQuery.sizeOf(c).width - 46) / 2,
-    child: Material(
-      color: Theme.of(c).colorScheme.surface.withValues(alpha: 0.92),
-      borderRadius: BorderRadius.circular(18),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final columns = constraints.maxWidth >= 620 ? 4 : 2;
+      return GridView.builder(
+        itemCount: actions.length,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: columns,
+          mainAxisSpacing: 11,
+          crossAxisSpacing: 11,
+          childAspectRatio: constraints.maxWidth < 350 ? 1.05 : 1.25,
+        ),
+        itemBuilder: (_, index) => _QuickAction(action: actions[index]),
+      );
+    },
+  );
+}
+
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({required this.action});
+
+  final _QuickActionData action;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Material(
+      color: isDark
+          ? const Color(0xFF0E222E).withValues(alpha: .96)
+          : Colors.white.withValues(alpha: .94),
+      borderRadius: BorderRadius.circular(21),
       child: InkWell(
-        onTap: tap,
-        borderRadius: BorderRadius.circular(16),
+        onTap: action.onTap,
+        borderRadius: BorderRadius.circular(21),
         child: Container(
-          padding: const EdgeInsets.all(11),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(21),
             border: Border.all(
-              color: Theme.of(
-                c,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.55),
+              color: theme.colorScheme.outlineVariant.withValues(alpha: .62),
             ),
+            boxShadow: isDark
+                ? null
+                : const [
+                    BoxShadow(
+                      color: Color(0x0D0B5146),
+                      blurRadius: 18,
+                      offset: Offset(0, 7),
+                    ),
+                  ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: Theme.of(c).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: Theme.of(c).colorScheme.onPrimaryContainer,
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: action.color.withValues(alpha: isDark ? .18 : .11),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(action.icon, size: 21, color: action.color),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.arrow_outward_rounded,
+                    size: 17,
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: .55,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                action.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
+              const SizedBox(height: 2),
+              Text(
+                action.caption,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _Metric extends StatelessWidget {
-  const _Metric(this.label, this.value, this.icon);
+  const _Metric(this.label, this.value, this.icon, this.color);
   final String label, value;
   final IconData icon;
+  final Color color;
+
   @override
-  Widget build(BuildContext c) => Card(
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(17),
-      side: BorderSide(
-        color: Theme.of(c).colorScheme.outlineVariant.withValues(alpha: 0.55),
+  Widget build(BuildContext c) {
+    final theme = Theme.of(c);
+    final isDark = theme.brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF0E222E).withValues(alpha: .96)
+            : Colors.white.withValues(alpha: .94),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: .58),
+        ),
+        boxShadow: isDark
+            ? null
+            : const [
+                BoxShadow(
+                  color: Color(0x0A0B5146),
+                  blurRadius: 16,
+                  offset: Offset(0, 6),
+                ),
+              ],
       ),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(10),
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 39,
+            height: 39,
             decoration: BoxDecoration(
-              color: Theme.of(c).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(11),
+              color: color.withValues(alpha: isDark ? .18 : .11),
+              borderRadius: BorderRadius.circular(13),
             ),
-            child: Icon(
-              icon,
-              size: 18,
-              color: Theme.of(c).colorScheme.onPrimaryContainer,
-            ),
+            child: Icon(icon, size: 19, color: color),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 11),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -549,23 +837,27 @@ class _Metric extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    c,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -.2,
+                  ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(c).textTheme.labelSmall,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
           ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _AverageCard extends StatelessWidget {
