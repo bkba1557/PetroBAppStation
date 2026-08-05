@@ -3,6 +3,8 @@ definitions:
     flutter: 3.44.8
     xcode: latest
     cocoapods: default
+    groups:
+      - google_maps_credentials
     ios_signing:
       distribution_type: app_store
       bundle_identifier: com.nnexoris.customer
@@ -33,8 +35,13 @@ definitions:
 
     - name: Install CocoaPods dependencies
       script: |
-        : "${GOOGLE_MAPS_IOS_API_KEY:?Set GOOGLE_MAPS_IOS_API_KEY in Codemagic secrets}"
-        printf '\nGOOGLE_MAPS_IOS_API_KEY=%s\n' "$GOOGLE_MAPS_IOS_API_KEY" >> ios/Flutter/Generated.xcconfig
+        if [ -z "${GOOGLE_MAPS_IOS_API_KEY:-}" ]; then
+          echo "Missing GOOGLE_MAPS_IOS_API_KEY."
+          echo "Add it as a Secret in the Codemagic variable group: google_maps_credentials"
+          exit 1
+        fi
+        umask 077
+        printf 'GOOGLE_MAPS_IOS_API_KEY=%s\n' "$GOOGLE_MAPS_IOS_API_KEY" > ios/Flutter/Maps.xcconfig
         cd ios
         pod install
 

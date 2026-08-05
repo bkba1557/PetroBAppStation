@@ -42,7 +42,16 @@ Use separate restricted keys:
   server's public IP. The existing encrypted Maps server credential can also
   be used through the cloud Maps settings page.
 
-Add `GOOGLE_MAPS_IOS_API_KEY` as a protected Codemagic environment variable.
+In Codemagic, open the application, then **Environment variables**, and add:
+
+- Variable name: `GOOGLE_MAPS_IOS_API_KEY`
+- Variable group: `google_maps_credentials`
+- Secret: enabled
+
+Both iOS workflows import this group from `codemagic.yaml`. During the build,
+the secret is written to the ignored `ios/Flutter/Maps.xcconfig`; it is never
+committed or printed in build logs.
+
 For Android builds, expose `GOOGLE_MAPS_ANDROID_API_KEY` as an environment or
 Gradle property.
 
