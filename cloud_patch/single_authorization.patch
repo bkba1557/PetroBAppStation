@@ -1,0 +1,142 @@
+--- a/app/customer_api/fueling.py
++++ b/app/customer_api/fueling.py
+@@
+ ACTIVE_STATES = (
+@@
+ )
++
++
++def _hardware_address(value):
++    """Return one canonical hexadecimal address without changing protocol data."""
++    raw = str(value or "").strip().lower()
++    if raw.startswith("0x"):
++        raw = raw[2:]
++    try:
++        return format(int(raw, 16), "x")
++    except (TypeError, ValueError):
++        return ""
++
++
++def _matching_hardware_targets(buses, pump, nozzle):
++    """Match by pump address plus nozzle identity; nozzle IDs repeat per pump."""
++    pump_address = _hardware_address(pump.device_address)
++    if not pump_address:
++        return []
++    matches = []
++    for bus in buses:
++        if _hardware_address(bus.device_address) != pump_address:
++            continue
++        for configured in (bus.protocol_config_json or {}).get("nozzles", []):
++            if (str(configured.get("id")) == str(nozzle.nozzle_id)
++                    and str(configured.get("fuel_code") or "").lower()
++                    == str(nozzle.fuel_code or "").lower()):
++                matches.append((bus, configured))
++    return matches
+@@
+-    buses = db.scalars(select(CloudBusDevice).where(
+-        CloudBusDevice.station_id == station.id, CloudBusDevice.edge_device_id == row.edge_device_id,
+-        CloudBusDevice.device_type == "FUEL_PUMP",
+-        CloudBusDevice.status.not_in(["DECOMMISSIONED", "SUPERSEDED", "DELETED"]))).all()
+-    matches = [(bus, configured) for bus in buses for configured in (bus.protocol_config_json or {}).get("nozzles", [])
+-               if str(configured.get("id")) == str(nozzle.nozzle_id)]
++    buses = db.scalars(select(CloudBusDevice).where(
++        CloudBusDevice.station_id == station.id, CloudBusDevice.edge_device_id == row.edge_device_id,
++        CloudBusDevice.device_type == "FUEL_PUMP", CloudBusDevice.status == "ACTIVE",
++        CloudBusDevice.configuration_status == "STAGED",
++        CloudBusDevice.hardware_active.is_(True))).all()
++    matches = _matching_hardware_targets(buses, pump, nozzle)
+@@
+-        "idempotency_key": key, "correlation_id": g.customer_correlation_id,
++        "idempotency_key": f"authorize:{row.public_id}", "correlation_id": g.customer_correlation_id,
+--- a/app/models.py
++++ b/app/models.py
+@@
+ class FuelingSession(TimestampMixin, Base):
+@@
+-    __table_args__ = (Index("ix_fueling_station_status", "station_id", "status"),)
++    __table_args__ = (
++        Index("ix_fueling_station_status", "station_id", "status"),
++        Index("uq_fueling_active_customer", "customer_id", unique=True,
++              postgresql_where=status.in_(("CREATED", "AWAITING_FUNDS", "FUNDS_HELD", "QR_RESOLVED",
++                  "AUTHORIZATION_QUEUED", "EDGE_RECEIVED", "PUMP_WAITING", "PUMP_AUTHORIZED",
++                  "READY_TO_FUEL", "FUELING", "STOP_REQUESTED", "COMPLETED",
++                  "SETTLEMENT_PENDING", "REFUND_PENDING"))),
++        Index("uq_fueling_active_nozzle", "nozzle_id", unique=True,
++              postgresql_where=status.in_(("CREATED", "AWAITING_FUNDS", "FUNDS_HELD", "QR_RESOLVED",
++                  "AUTHORIZATION_QUEUED", "EDGE_RECEIVED", "PUMP_WAITING", "PUMP_AUTHORIZED",
++                  "READY_TO_FUEL", "FUELING", "STOP_REQUESTED", "COMPLETED",
++                  "SETTLEMENT_PENDING", "REFUND_PENDING"))),
++    )
+@@
+ class PumpCommand(TimestampMixin, Base):
+@@
+     error_message: Mapped[str | None] = mapped_column(Text)
++    __table_args__ = (UniqueConstraint("fueling_session_id", name="uq_pump_command_fueling_session"),)
+--- /dev/null
++++ b/migrations/versions/0049_customer_single_authorization.py
+@@
++"""One active fueling and one hardware authorization per customer session.
++
++Revision ID: 0049_customer_single_authorization
++Revises: 0048_customer_nozzle_qr
++"""
++
++from alembic import op
++import sqlalchemy as sa
++
++
++revision = "0049_customer_single_authorization"
++down_revision = "0048_customer_nozzle_qr"
++branch_labels = None
++depends_on = None
++
++ACTIVE = "('CREATED','AWAITING_FUNDS','FUNDS_HELD','QR_RESOLVED','AUTHORIZATION_QUEUED','EDGE_RECEIVED','PUMP_WAITING','PUMP_AUTHORIZED','READY_TO_FUEL','FUELING','STOP_REQUESTED','COMPLETED','SETTLEMENT_PENDING','REFUND_PENDING')"
++
++
++def upgrade():
++    op.create_unique_constraint("uq_pump_command_fueling_session", "pump_commands", ["fueling_session_id"])
++    op.create_index("uq_fueling_active_customer", "fueling_sessions", ["customer_id"],
++        unique=True, postgresql_where=sa.text(f"status IN {ACTIVE}"))
++    op.create_index("uq_fueling_active_nozzle", "fueling_sessions", ["nozzle_id"],
++        unique=True, postgresql_where=sa.text(f"status IN {ACTIVE}"))
++
++
++def downgrade():
++    op.drop_index("uq_fueling_active_nozzle", table_name="fueling_sessions")
++    op.drop_index("uq_fueling_active_customer", table_name="fueling_sessions")
++    op.drop_constraint("uq_pump_command_fueling_session", "pump_commands", type_="unique")
+--- /dev/null
++++ b/tests/test_customer_single_authorization.py
+@@
++from types import SimpleNamespace
++
++from app.customer_api.fueling import _hardware_address, _matching_hardware_targets
++
++
++def test_hardware_address_normalizes_cloud_and_pump_forms():
++    assert _hardware_address("0x42") == _hardware_address("42") == "42"
++
++
++def test_target_match_uses_pump_address_when_nozzle_ids_repeat():
++    pump = SimpleNamespace(device_address="0x42")
++    nozzle = SimpleNamespace(nozzle_id="N-1", fuel_code="gasoline95")
++    buses = [
++        SimpleNamespace(device_address="40", protocol_config_json={"nozzles": [
++            {"id": "N-1", "fuel_code": "gasoline95", "address": "0x40"}]}),
++        SimpleNamespace(device_address="42", protocol_config_json={"nozzles": [
++            {"id": "N-1", "fuel_code": "gasoline95", "address": "0x42"}]}),
++        SimpleNamespace(device_address="44", protocol_config_json={"nozzles": [
++            {"id": "N-1", "fuel_code": "diesel", "address": "0x44"}]}),
++    ]
++    matches = _matching_hardware_targets(buses, pump, nozzle)
++    assert len(matches) == 1
++    assert matches[0][0].device_address == "42"
++    assert matches[0][1]["address"] == "0x42"
++
++
++def test_target_match_rejects_wrong_fuel_on_same_nozzle_identity():
++    pump = SimpleNamespace(device_address="0x44")
++    nozzle = SimpleNamespace(nozzle_id="N-1", fuel_code="gasoline95")
++    bus = SimpleNamespace(device_address="44", protocol_config_json={"nozzles": [
++        {"id": "N-1", "fuel_code": "diesel", "address": "0x44"}]})
++    assert _matching_hardware_targets([bus], pump, nozzle) == []

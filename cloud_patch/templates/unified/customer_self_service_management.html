@@ -1,0 +1,62 @@
+{% extends 'unified/layouts/base.html' %}
+{% block title %}إدارة الخدمات الذاتية · NNEXORIS{% endblock %}
+{% block content %}
+<main class="tenant-companies">
+  <header class="page-head">
+    <div><small class="muted">Customer App / QR</small><h1>إدارة الخدمات الذاتية</h1><p>إدارة إتاحة الشركة والمحطة وسياسة الوقود والدفع دون تفعيل Hardware Fueling عالميًا.</p></div>
+    <span class="badge badge-shadow">PILOT / OPERATOR SUPERVISED</span>
+  </header>
+  <section class="card" style="padding:18px">
+    <form method="get" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
+      <label style="min-width:280px">المحطة المرتبطة بالشركة
+        <select name="station" required onchange="this.form.submit()"><option value="">اختر المحطة</option>{% for row in stations %}<option value="{{ row.id }}" {{ 'selected' if selected_station and selected_station.id == row.id else '' }}>{{ row.name_ar }} · {{ row.station_id }}</option>{% endfor %}</select>
+      </label>
+      <noscript><button type="submit">عرض</button></noscript>
+    </form>
+  </section>
+  {% if selected_station and selected_company %}
+  <section class="card" style="padding:18px;margin-top:16px">
+    <h2>{{ selected_station.name_ar }}</h2>
+    <p>الشركة: <b>{{ selected_company.name_ar }}</b> · Hardware Fueling: <b>لا يتغير من هذه الصفحة</b></p>
+    <div id="settings-message" class="muted" role="status"></div>
+    <form id="company-settings" data-company-id="{{ selected_company.id }}" style="margin-top:14px">
+      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="enabled" {{ 'checked' if selected_company.customer_self_service_enabled else '' }}> تفعيل Customer Self-Service للشركة</label>
+      <button type="submit" style="margin-top:10px">حفظ إعداد الشركة</button>
+    </form>
+    <hr style="margin:18px 0">
+    <form id="station-settings" data-company-id="{{ selected_company.id }}" data-station-id="{{ selected_station.id }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
+        <label>إتاحة المحطة<select name="enabled"><option value="true" {{ 'selected' if selected_station.customer_self_service_enabled else '' }}>مفعلة</option><option value="false" {{ 'selected' if not selected_station.customer_self_service_enabled else '' }}>معطلة</option></select></label>
+        <label>الحالة<select name="status"><option value="PILOT" {{ 'selected' if selected_station.self_service_status == 'PILOT' else '' }}>PILOT / Operator Supervised</option><option value="SCHEDULED" {{ 'selected' if selected_station.self_service_status == 'SCHEDULED' else '' }}>SCHEDULED</option><option value="MAINTENANCE" {{ 'selected' if selected_station.self_service_status == 'MAINTENANCE' else '' }}>MAINTENANCE</option><option value="DISABLED" {{ 'selected' if selected_station.self_service_status == 'DISABLED' else '' }}>DISABLED</option><option value="ACTIVE" disabled>ACTIVE — بعد اعتماد السلامة الميدانية</option></select></label>
+        <label>الحد الأدنى (SAR)<input name="minimumAmount" type="number" min="1" step="0.01" value="{{ selected_station.minimum_customer_amount }}"></label>
+        <label>الحد الأقصى (SAR)<input name="maximumAmount" type="number" min="1" step="0.01" value="{{ selected_station.maximum_customer_amount }}"></label>
+        <label>بداية الجدول<input name="startAt" type="datetime-local" value="{{ selected_station.self_service_start_at.strftime('%Y-%m-%dT%H:%M') if selected_station.self_service_start_at else '' }}"></label>
+        <label>نهاية الجدول<input name="endAt" type="datetime-local" value="{{ selected_station.self_service_end_at.strftime('%Y-%m-%dT%H:%M') if selected_station.self_service_end_at else '' }}"></label>
+      </div>
+      <fieldset style="margin-top:14px"><legend>أنواع الوقود المسموحة</legend><p class="muted">عدم اختيار أي نوع يعني السماح بكل الأنواع ذات السعر الفعال.</p><div style="display:flex;gap:14px;flex-wrap:wrap">{% for code in fuel_codes %}<label><input type="checkbox" name="allowedFuelTypes" value="{{ code }}" {{ 'checked' if code in selected_station.allowed_fuel_types else '' }}> {{ code }}</label>{% endfor %}</div></fieldset>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px"><label><input type="checkbox" name="allowWalletPayment" {{ 'checked' if selected_station.allow_wallet_payment else '' }}> الدفع بالمحفظة</label><label><input type="checkbox" name="allowStripeDirectPayment" {{ 'checked' if selected_station.allow_stripe_direct_payment else '' }}> Stripe Direct</label><label><input type="checkbox" checked disabled> تأكيد المشغل مطلوب في PILOT</label></div>
+      <button type="submit" style="margin-top:14px">حفظ سياسة المحطة</button>
+    </form>
+  </section>
+  <section class="card" style="margin-top:16px;overflow:auto"><table><thead><tr><th>المضخة</th><th>اللي</th><th>نوع الوقود</th><th>السعر الحالي</th><th>الحالة</th><th>QR</th><th>الإجراء</th></tr></thead><tbody>
+    {% for nozzle in nozzles %}{% set pump = pumps.get(nozzle.pump_id) %}{% set token = qr_tokens.get(nozzle.id) %}<tr>
+      <td>{{ pump.name_ar if pump else nozzle.pump_id }}<small style="display:block">{{ pump.pump_id if pump else '—' }}</small></td><td><b>لي رقم {{ nozzle.nozzle_number }}</b><small style="display:block">{{ nozzle.nozzle_id }}</small></td><td>{{ nozzle.fuel_type }} · {{ nozzle.fuel_code }}</td><td>{{ nozzle.unit_price or '—' }} SAR</td><td>{{ 'جاهز' if nozzle.enabled and pump and pump.enabled else 'معطل' }}</td><td>{% if token %}<span class="badge badge-success">نشط</span>{% else %}<span class="badge">غير منشأ</span>{% endif %}</td>
+      <td style="display:flex;gap:8px;flex-wrap:wrap"><form method="post" action="/self-service/customer-management/nozzles/{{ nozzle.id }}/qr"><button type="submit" {{ 'disabled' if not selected_station.customer_self_service_enabled or selected_station.self_service_status not in ['PILOT','SCHEDULED'] else '' }}>{{ 'تدوير QR' if token else 'إنشاء QR' }}</button></form>{% if token %}<a class="button" target="_blank" href="/self-service/customer-management/qr/{{ token.id }}/print">طباعة</a><form method="post" action="/self-service/customer-management/qr/{{ token.id }}/disable"><button type="submit" class="danger">تعطيل</button></form>{% endif %}</td>
+    </tr>{% else %}<tr><td colspan="7">لا توجد ليات مرتبطة بهذه المحطة.</td></tr>{% endfor %}
+  </tbody></table></section>
+  {% endif %}
+</main>
+{% if selected_station and selected_company %}<script>
+const message = document.getElementById('settings-message');
+async function save(url, body) {
+  message.textContent = 'جارٍ الحفظ…';
+  const response = await fetch(url, {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || 'SAVE_FAILED');
+  message.textContent = 'تم الحفظ بنجاح. لم يتم إنشاء أي Hardware command.';
+  return result;
+}
+document.getElementById('company-settings').addEventListener('submit', async (event) => { event.preventDefault(); const form=event.currentTarget; try { await save(`/api/v1/companies/${form.dataset.companyId}/self-service`, {enabled: form.enabled.checked}); } catch(error) { message.textContent=`تعذر الحفظ: ${error.message}`; } });
+document.getElementById('station-settings').addEventListener('submit', async (event) => { event.preventDefault(); const form=event.currentTarget; const fuels=[...form.querySelectorAll('[name=allowedFuelTypes]:checked')].map(x=>x.value); const body={enabled:form.enabled.value==='true',status:form.status.value,minimumAmount:form.minimumAmount.value,maximumAmount:form.maximumAmount.value,startAt:form.startAt.value||null,endAt:form.endAt.value||null,allowedFuelTypes:fuels,allowWalletPayment:form.allowWalletPayment.checked,allowStripeDirectPayment:form.allowStripeDirectPayment.checked}; try { await save(`/api/v1/companies/${form.dataset.companyId}/self-service/stations/${form.dataset.stationId}`, body); } catch(error) { message.textContent=`تعذر الحفظ: ${error.message}`; } });
+</script>{% endif %}
+{% endblock %}

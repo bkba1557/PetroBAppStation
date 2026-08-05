@@ -1,0 +1,15 @@
+--- tests/test_customer_api.py
++++ tests/test_customer_api.py
+@@ -216,7 +216,11 @@
+         station = db.scalar(select(Station).where(Station.station_id == "STATION-HAIL-001"))
+         station.customer_self_service_enabled = False
+         db.commit()
+-    assert client.get("/api/v1/customer/stations", headers=auth).get_json() == []
++    stations = client.get("/api/v1/customer/stations", headers=auth).get_json()
++    assert len(stations) == 1
++    assert stations[0]["stationVisible"] is True
++    assert stations[0]["selfServiceEnabled"] is False
++    assert stations[0]["availabilityReason"] == "STATION_SELF_SERVICE_DISABLED"
+     denied = client.post("/api/v1/customer/qr/resolve", json={"token": QR_RAW}, headers=auth)
+     assert denied.status_code == 200
+     assert denied.get_json()["code"] == "DISPENSER_UNAVAILABLE"

@@ -1,0 +1,47 @@
+--- app/customer_management/routes.py
++++ app/customer_management/routes.py
+@@ -11,4 +11,5 @@
+ from app.core.roles import normalize_role
+ from app.core.tenant import tenant_context
++from app.customer_api.fuel_codes import normalize_fuel_code
+ from app.extensions import get_session
+ from app.models import (
+@@ -451,6 +452,20 @@
+     station.self_service_status = status
+     # Enabling self-service never chooses a transaction amount. The customer
+     # supplies the requested amount in the app when starting a fueling session.
+-    if "allowedFuelTypes" in data: station.allowed_fuel_types = [str(x)[:40] for x in data["allowedFuelTypes"]]
++    if "allowedFuelTypes" in data:
++        if not isinstance(data["allowedFuelTypes"], list):
++            return jsonify(error="INVALID_ALLOWED_FUEL_TYPES"), 400
++        station.allowed_fuel_types = sorted({
++            normalize_fuel_code(value)[:40] for value in data["allowedFuelTypes"]
++        })
++    try:
++        minimum = Decimal(str(data.get("minimumAmount", station.minimum_customer_amount)))
++        maximum = Decimal(str(data.get("maximumAmount", station.maximum_customer_amount)))
++    except (InvalidOperation, TypeError, ValueError):
++        return jsonify(error="INVALID_CUSTOMER_AMOUNT_LIMITS"), 400
++    if minimum <= 0 or maximum < minimum:
++        return jsonify(error="INVALID_CUSTOMER_AMOUNT_LIMITS"), 400
++    station.minimum_customer_amount = minimum
++    station.maximum_customer_amount = maximum
+     try:
+         if "startAt" in data: station.self_service_start_at = _optional_datetime(data["startAt"])
+@@ -485,7 +500,7 @@
+     if not context.is_super_admin:
+         station_stmt = station_stmt.where(Station.company_id == context.require_tenant())
+     stations = db.scalars(station_stmt.order_by(Company.name_ar, Station.name_ar)).all()
+-    selected = None
++    selected = None; selected_company = None; fuel_codes = []
+     selected_id = request.args.get("station", "")
+     if selected_id.isdigit():
+         selected = _self_service_station(int(selected_id))
+@@ -493,5 +508,7 @@
+         selected = stations[0]
+     pumps, nozzles, tokens = [], [], {}
+     if selected is not None:
++        selected_company = db.get(Company, selected.company_id)
++        fuel_codes = sorted({normalize_fuel_code(row.fuel_code) for row in db.scalars(select(Nozzle).where(Nozzle.station_id == selected.id, Nozzle.deleted_at.is_(None))).all()})
+         pumps = db.scalars(select(Pump).where(Pump.station_id == selected.id,
+             Pump.deleted_at.is_(None)).order_by(Pump.pump_number)).all()

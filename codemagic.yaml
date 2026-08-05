@@ -1,0 +1,116 @@
+definitions:
+  environment: &ios_environment
+    flutter: 3.38.3
+    xcode: latest
+    cocoapods: default
+    ios_signing:
+      distribution_type: app_store
+      bundle_identifier: com.nnexoris.customer
+    vars:
+      BUNDLE_ID: com.nnexoris.customer
+      XCODE_WORKSPACE: Runner.xcworkspace
+      XCODE_SCHEME: Runner
+      APP_STORE_APPLE_ID: "6798348508"
+      APP_ENV: production
+
+  cache: &ios_cache
+    cache_paths:
+      - $FLUTTER_ROOT/.pub-cache
+      - $HOME/.pub-cache
+      - $HOME/Library/Caches/CocoaPods
+
+  scripts: &ios_scripts
+    - name: Get Flutter packages
+      script: |
+        flutter clean
+        flutter pub get
+        flutter gen-l10n
+
+    - name: Analyze and test
+      script: |
+        flutter analyze
+        flutter test
+
+    - name: Install CocoaPods dependencies
+      script: |
+        cd ios
+        pod install
+
+    - name: Set up code signing
+      script: |
+        xcode-project use-profiles
+
+    - name: Build signed IPA
+      script: |
+        set -euo pipefail
+
+        PUBSPEC_BUILD_NUMBER="$(grep '^version:' pubspec.yaml | sed -nE 's/.*\+([0-9]+)$/\1/p')"
+        LATEST_TESTFLIGHT_BUILD_NUMBER="$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || true)"
+        LATEST_APP_STORE_BUILD_NUMBER="$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || true)"
+
+        LATEST_BUILD_NUMBER=0
+        for candidate in "$LATEST_TESTFLIGHT_BUILD_NUMBER" "$LATEST_APP_STORE_BUILD_NUMBER"; do
+          if echo "$candidate" | grep -Eq '^[0-9]+$' && [ "$candidate" -gt "$LATEST_BUILD_NUMBER" ]; then
+            LATEST_BUILD_NUMBER="$candidate"
+          fi
+        done
+
+        if [ "$LATEST_BUILD_NUMBER" -gt 0 ]; then
+          NEXT_BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
+          if echo "$PUBSPEC_BUILD_NUMBER" | grep -Eq '^[0-9]+$' && [ "$PUBSPEC_BUILD_NUMBER" -gt "$NEXT_BUILD_NUMBER" ]; then
+            NEXT_BUILD_NUMBER="$PUBSPEC_BUILD_NUMBER"
+          fi
+        else
+          # Safe fallback when App Store Connect is temporarily unavailable.
+          NEXT_BUILD_NUMBER="$(date -u +%Y%m%d%H%M%S)"
+        fi
+
+        echo "Latest TestFlight build: ${LATEST_TESTFLIGHT_BUILD_NUMBER:-not found}"
+        echo "Latest App Store build: ${LATEST_APP_STORE_BUILD_NUMBER:-not found}"
+        echo "Using iOS build number: $NEXT_BUILD_NUMBER"
+
+        flutter build ipa --release \
+          --build-number="$NEXT_BUILD_NUMBER" \
+          --dart-define=APP_ENV="$APP_ENV" \
+          --dart-define=ENABLE_LOGGING=false \
+          --export-options-plist=/Users/builder/export_options.plist
+
+  artifacts: &ios_artifacts
+    - build/ios/ipa/*.ipa
+    - build/ios/archive/*.xcarchive
+    - build/ios/**/*.dSYM
+    - /tmp/xcodebuild_logs/*.log
+
+workflows:
+  ios-testflight:
+    name: PETRO B - TestFlight
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: albuhairaalarabianipras
+    environment: *ios_environment
+    cache: *ios_cache
+    scripts: *ios_scripts
+    artifacts: *ios_artifacts
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
+
+  ios-production:
+    name: PETRO B - App Store Production
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: albuhairaalarabianipras
+    environment: *ios_environment
+    cache: *ios_cache
+    scripts: *ios_scripts
+    artifacts: *ios_artifacts
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: true
+        release_type: MANUAL

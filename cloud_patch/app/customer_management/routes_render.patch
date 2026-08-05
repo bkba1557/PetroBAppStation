@@ -1,0 +1,6 @@
+--- app/customer_management/routes.py
++++ app/customer_management/routes.py
+@@ -520 +520,2 @@
+-        qr_tokens=tokens, current_station=None, current_role=role.lower().replace(" ", "_"))
++        qr_tokens=tokens, selected_company=selected_company, fuel_codes=fuel_codes,
++        current_station=None, current_role=role.lower().replace(" ", "_"))

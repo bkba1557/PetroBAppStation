@@ -1,0 +1,38 @@
+--- tests/test_customer_api.py
++++ tests/test_customer_api.py
+@@ -197,14 +197,18 @@
+-def test_company_self_service_disabled_hides_stations_and_blocks_qr(client, app):
++def test_company_self_service_disabled_keeps_station_visible_and_blocks_qr(client, app):
+     payload = register(client); auth = authorization(payload)
+     with Session(app.extensions["unified_engine"]) as db:
+         company = db.scalar(select(Company).where(Company.company_key == "broq"))
+         company.customer_self_service_enabled = False
+         db.commit()
+-    assert client.get("/api/v1/customer/stations", headers=auth).get_json() == []
++    stations = client.get("/api/v1/customer/stations", headers=auth).get_json()
++    assert len(stations) == 1
++    assert stations[0]["stationVisible"] is True
++    assert stations[0]["selfServiceEnabled"] is False
++    assert stations[0]["availabilityReason"] == "COMPANY_SELF_SERVICE_DISABLED"
+     denied = client.post("/api/v1/customer/qr/resolve", json={"token": QR_RAW}, headers=auth)
+     assert denied.status_code == 200
+     assert denied.get_json() == {"valid": False, "code": "DISPENSER_UNAVAILABLE"}
+ 
+ 
+-def test_station_self_service_disabled_hides_station_and_blocks_qr(client, app):
++def test_station_self_service_disabled_keeps_station_visible_and_blocks_qr(client, app):
+     payload = register(client); auth = authorization(payload)
+     with Session(app.extensions["unified_engine"]) as db:
+         station = db.scalar(select(Station).where(Station.station_id == "STATION-HAIL-001"))
+@@ -212,7 +216,11 @@
+         station.customer_self_service_enabled = False
+         db.commit()
+-    assert client.get("/api/v1/customer/stations", headers=auth).get_json() == []
++    stations = client.get("/api/v1/customer/stations", headers=auth).get_json()
++    assert len(stations) == 1
++    assert stations[0]["stationVisible"] is True
++    assert stations[0]["selfServiceEnabled"] is False
++    assert stations[0]["availabilityReason"] == "STATION_SELF_SERVICE_DISABLED"
+     denied = client.post("/api/v1/customer/qr/resolve", json={"token": QR_RAW}, headers=auth)
+     assert denied.status_code == 200
+     assert denied.get_json()["code"] == "DISPENSER_UNAVAILABLE"
