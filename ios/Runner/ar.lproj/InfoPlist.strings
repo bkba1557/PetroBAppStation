@@ -1,2 +1,4 @@
 "CFBundleDisplayName" = "PETRO B";
 "NSCameraUsageDescription" = "يستخدم PETRO B الكاميرا فقط لمسح رموز QR الخاصة بالمحطة والتعبئة.";
+"NSLocationWhenInUseUsageDescription" = "يستخدم PETRO B موقعك أثناء استخدام التطبيق لعرض المحطات القريبة وحساب مسافة القيادة ووقت الوصول وبدء الملاحة.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "يستخدم PETRO B موقعك فقط أثناء استخدام التطبيق لعرض المحطات القريبة وحساب مسافة القيادة ووقت الوصول وبدء الملاحة. لا يتتبع PETRO B موقعك في الخلفية.";

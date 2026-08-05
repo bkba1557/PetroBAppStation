@@ -32,6 +32,8 @@
 	<string>PETRO B uses the camera only to scan station and fueling QR codes.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>PETRO B uses your location to show nearby stations, driving distance, and estimated arrival time.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>PETRO B uses your location only while you use the app to show nearby stations, calculate driving distance and arrival time, and start navigation. PETRO B does not track your location in the background.</string>
 	<key>GMSApiKey</key>
 	<string>$(GOOGLE_MAPS_IOS_API_KEY)</string>
 	<key>UIApplicationSceneManifest</key>
