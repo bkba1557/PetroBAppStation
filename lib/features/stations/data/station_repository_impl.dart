@@ -17,10 +17,7 @@ class StationRepositoryImpl implements StationRepository {
   ]) async {
     final response = await _client.get<List<Station>>(
       ApiEndpoints.stations,
-      query: {
-        ...query.toQuery(),
-        '_refresh': _refreshToken,
-      },
+      query: {...query.toQuery(), '_refresh': _refreshToken},
       decode: (json) => (json as List<dynamic>)
           .map((item) => Station.fromJson(item as Map<String, dynamic>))
           .toList(growable: false),
@@ -59,5 +56,40 @@ class StationRepositoryImpl implements StationRepository {
           StationAvailability.fromJson(json as Map<String, dynamic>),
     );
     return response.data;
+  }
+
+  @override
+  Future<Map<String, StationRouteMetrics>> getRouteMetrics(
+    GeoPosition origin,
+    List<String> stationIds,
+  ) async {
+    if (stationIds.isEmpty) return const {};
+    final result = <String, StationRouteMetrics>{};
+    for (var start = 0; start < stationIds.length; start += 25) {
+      final end = start + 25 < stationIds.length
+          ? start + 25
+          : stationIds.length;
+      final response = await _client.post<Map<String, StationRouteMetrics>>(
+        '${ApiEndpoints.stations}/route-matrix',
+        data: {
+          'origin': {
+            'latitude': origin.latitude,
+            'longitude': origin.longitude,
+          },
+          'stationIds': stationIds.sublist(start, end),
+        },
+        decode: (json) {
+          final payload = json as Map<String, dynamic>;
+          final routes = payload['routes'] as List<dynamic>? ?? const [];
+          return {
+            for (final item in routes)
+              (item as Map<String, dynamic>)['stationId'] as String:
+                  StationRouteMetrics.fromJson(item),
+          };
+        },
+      );
+      result.addAll(response.data);
+    }
+    return result;
   }
 }

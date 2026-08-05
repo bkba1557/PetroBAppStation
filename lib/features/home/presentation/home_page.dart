@@ -179,12 +179,12 @@ class _DashboardBody extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         GridView.count(
-          crossAxisCount: MediaQuery.sizeOf(context).width > 600 ? 4 : 2,
+          crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: MediaQuery.sizeOf(context).width < 370 ? 1.35 : 1.5,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          mainAxisExtent: 92,
           children: [
             _Metric(
               'التعبئات',
@@ -685,27 +685,30 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final columns = constraints.maxWidth >= 620 ? 4 : 2;
+      final compact = constraints.maxWidth < 620;
       return GridView.builder(
         itemCount: actions.length,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: columns,
-          mainAxisSpacing: 11,
-          crossAxisSpacing: 11,
-          childAspectRatio: constraints.maxWidth < 350 ? 1.05 : 1.25,
+          crossAxisCount: 4,
+          mainAxisSpacing: compact ? 8 : 11,
+          crossAxisSpacing: compact ? 8 : 11,
+          mainAxisExtent: compact ? 76 : null,
+          childAspectRatio: 1.25,
         ),
-        itemBuilder: (_, index) => _QuickAction(action: actions[index]),
+        itemBuilder: (_, index) =>
+            _QuickAction(action: actions[index], compact: compact),
       );
     },
   );
 }
 
 class _QuickAction extends StatelessWidget {
-  const _QuickAction({required this.action});
+  const _QuickAction({required this.action, required this.compact});
 
   final _QuickActionData action;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -715,14 +718,14 @@ class _QuickAction extends StatelessWidget {
       color: isDark
           ? const Color(0xFF0E222E).withValues(alpha: .96)
           : Colors.white.withValues(alpha: .94),
-      borderRadius: BorderRadius.circular(21),
+      borderRadius: BorderRadius.circular(compact ? 16 : 21),
       child: InkWell(
         onTap: action.onTap,
-        borderRadius: BorderRadius.circular(21),
+        borderRadius: BorderRadius.circular(compact ? 16 : 21),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(compact ? 6 : 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(21),
+            borderRadius: BorderRadius.circular(compact ? 16 : 21),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: .62),
             ),
@@ -740,44 +743,63 @@ class _QuickAction extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: compact
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
                 children: [
                   Container(
-                    width: 42,
-                    height: 42,
+                    width: compact ? 28 : 42,
+                    height: compact ? 28 : 42,
                     decoration: BoxDecoration(
                       color: action.color.withValues(alpha: isDark ? .18 : .11),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(compact ? 10 : 14),
                     ),
-                    child: Icon(action.icon, size: 21, color: action.color),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.arrow_outward_rounded,
-                    size: 17,
-                    color: theme.colorScheme.onSurfaceVariant.withValues(
-                      alpha: .55,
+                    child: Icon(
+                      action.icon,
+                      size: compact ? 16 : 21,
+                      color: action.color,
                     ),
                   ),
+                  if (!compact) ...[
+                    const Spacer(),
+                    Icon(
+                      Icons.arrow_outward_rounded,
+                      size: 17,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: .55,
+                      ),
+                    ),
+                  ],
                 ],
               ),
               const Spacer(),
-              Text(
-                action.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
+              Align(
+                alignment: compact
+                    ? AlignmentDirectional.center
+                    : AlignmentDirectional.centerStart,
+                child: Text(
+                  action.label,
+                  maxLines: compact ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: compact ? TextAlign.center : TextAlign.start,
+                  style:
+                      (compact
+                              ? theme.textTheme.labelMedium
+                              : theme.textTheme.bodyMedium)
+                          ?.copyWith(fontWeight: FontWeight.w900),
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                action.caption,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              if (!compact) ...[
+                const SizedBox(height: 2),
+                Text(
+                  action.caption,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -797,12 +819,12 @@ class _Metric extends StatelessWidget {
     final theme = Theme.of(c);
     final isDark = theme.brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.all(13),
+      padding: const EdgeInsets.all(7),
       decoration: BoxDecoration(
         color: isDark
             ? const Color(0xFF0E222E).withValues(alpha: .96)
             : Colors.white.withValues(alpha: .94),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(15),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: .58),
         ),
@@ -816,37 +838,39 @@ class _Metric extends StatelessWidget {
                 ),
               ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 39,
-            height: 39,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               color: color.withValues(alpha: isDark ? .18 : .11),
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 19, color: color),
+            child: Icon(icon, size: 16, color: color),
           ),
-          const SizedBox(width: 11),
+          const SizedBox(height: 5),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     letterSpacing: -.2,
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

@@ -8,6 +8,9 @@ _ALIASES = {
     "95": "gasoline95",
     "gasoline95": "gasoline95",
     "petrol95": "gasoline95",
+    "98": "gasoline98",
+    "gasoline98": "gasoline98",
+    "petrol98": "gasoline98",
     "diesel": "diesel",
     "kerosene": "kerosene",
     "lpg": "lpg",
@@ -25,7 +28,7 @@ def normalize_fuel_code(value: object) -> str:
 
 def public_fuel_kind(code: object) -> str:
     canonical = normalize_fuel_code(code)
-    if canonical in {"gasoline91", "gasoline95", "diesel", "kerosene", "lpg"}:
+    if canonical in {"gasoline91", "gasoline95", "gasoline98", "diesel", "kerosene", "lpg"}:
         return canonical
     return "other"
 
@@ -61,4 +64,3 @@ def availability_reason(
     if not hardware_enabled:
         return "HARDWARE_FUELING_DISABLED"
     return "AVAILABLE"
-

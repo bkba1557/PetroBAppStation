@@ -27,6 +27,8 @@ import 'package:nnexoris_customer/features/fueling/domain/repositories/fueling_r
 import 'package:nnexoris_customer/features/home/data/dashboard_repository.dart';
 import 'package:nnexoris_customer/features/qr_scanner/data/qr_repository_impl.dart';
 import 'package:nnexoris_customer/features/qr_scanner/domain/repositories/qr_repository.dart';
+import 'package:nnexoris_customer/features/stations/data/device_location_service.dart';
+import 'package:nnexoris_customer/features/stations/data/station_navigation_service.dart';
 import 'package:nnexoris_customer/features/stations/data/station_repository_impl.dart';
 import 'package:nnexoris_customer/features/stations/domain/repositories/station_repository.dart';
 import 'package:nnexoris_customer/features/transactions/data/transaction_repository.dart';
@@ -116,6 +118,12 @@ final authRepositoryProvider = Provider<AuthRepository>(
 );
 final stationRepositoryProvider = Provider<StationRepository>(
   (ref) => StationRepositoryImpl(ref.watch(httpClientProvider)),
+);
+final locationServiceProvider = Provider<LocationService>(
+  (ref) => DeviceLocationService(),
+);
+final stationNavigationServiceProvider = Provider(
+  (ref) => const StationNavigationService(),
 );
 final vehicleRepositoryProvider = Provider<VehicleRepository>(
   (ref) => VehicleRepositoryImpl(ref.watch(httpClientProvider)),

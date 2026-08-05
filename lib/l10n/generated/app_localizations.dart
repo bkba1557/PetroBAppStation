@@ -296,6 +296,120 @@ abstract class AppLocalizations {
   /// **'لا توجد نتائج مطابقة'**
   String get noSearchResults;
 
+  /// No description provided for @stationsMap.
+  ///
+  /// In ar, this message translates to:
+  /// **'خريطة المحطات'**
+  String get stationsMap;
+
+  /// No description provided for @navigateToStation.
+  ///
+  /// In ar, this message translates to:
+  /// **'الذهاب للمحطة'**
+  String get navigateToStation;
+
+  /// No description provided for @availableFuel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوقود المتوفر'**
+  String get availableFuel;
+
+  /// No description provided for @distanceKm.
+  ///
+  /// In ar, this message translates to:
+  /// **'{distance} كم'**
+  String distanceKm(String distance);
+
+  /// No description provided for @arrivalMinutes.
+  ///
+  /// In ar, this message translates to:
+  /// **'{minutes} دقيقة'**
+  String arrivalMinutes(int minutes);
+
+  /// No description provided for @routeUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيانات الطريق غير متاحة'**
+  String get routeUnavailable;
+
+  /// No description provided for @locationPermissionMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'فعّل الموقع لمعرفة المسافة ووقت الوصول'**
+  String get locationPermissionMessage;
+
+  /// No description provided for @poweredByGoogle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيانات الطريق مقدمة من Google'**
+  String get poweredByGoogle;
+
+  /// No description provided for @stationSearchHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'المحطة أو العنوان أو الشركة'**
+  String get stationSearchHint;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get filterAll;
+
+  /// No description provided for @filterNearest.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأقرب'**
+  String get filterNearest;
+
+  /// No description provided for @filterCompanies.
+  ///
+  /// In ar, this message translates to:
+  /// **'الشركات'**
+  String get filterCompanies;
+
+  /// No description provided for @enableLocation.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل الموقع'**
+  String get enableLocation;
+
+  /// No description provided for @locationPermissionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اعثر على المحطة المناسبة أسرع'**
+  String get locationPermissionTitle;
+
+  /// No description provided for @locationPermissionReason.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسمح بالوصول إلى موقعك لعرض مسافة القيادة ووقت الوصول والمحطات الأقرب وتشغيل الملاحة. يُستخدم موقعك لهذه المزايا فقط ولا تتم مشاركته دون إذنك.'**
+  String get locationPermissionReason;
+
+  /// No description provided for @allowLocation.
+  ///
+  /// In ar, this message translates to:
+  /// **'السماح بالموقع'**
+  String get allowLocation;
+
+  /// No description provided for @notNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس الآن'**
+  String get notNow;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In ar, this message translates to:
+  /// **'فتح الإعدادات'**
+  String get openSettings;
+
+  /// No description provided for @locationSettingsReason.
+  ///
+  /// In ar, this message translates to:
+  /// **'خدمة الموقع مغلقة. افتح إعدادات الجهاز لتفعيلها.'**
+  String get locationSettingsReason;
+
   /// No description provided for @fuelingAvailable.
   ///
   /// In ar, this message translates to:
@@ -398,6 +512,12 @@ abstract class AppLocalizations {
   /// **'بنزين 95'**
   String get fuelGasoline95;
 
+  /// No description provided for @fuelGasoline98.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنزين 98'**
+  String get fuelGasoline98;
+
   /// No description provided for @fuelDiesel.
   ///
   /// In ar, this message translates to:
@@ -433,6 +553,54 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'شحن الرصيد'**
   String get topUp;
+
+  /// No description provided for @topUpTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف رصيدًا إلى محفظتك'**
+  String get topUpTitle;
+
+  /// No description provided for @topUpSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر المبلغ وأكمل الدفع بأمان'**
+  String get topUpSubtitle;
+
+  /// No description provided for @chooseTopUpAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر مبلغ الشحن'**
+  String get chooseTopUpAmount;
+
+  /// No description provided for @customAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'أو أدخل مبلغًا مخصصًا'**
+  String get customAmount;
+
+  /// No description provided for @amountInSar.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ بالريال'**
+  String get amountInSar;
+
+  /// No description provided for @continueToPayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتابعة إلى الدفع'**
+  String get continueToPayment;
+
+  /// No description provided for @securePayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفع آمن'**
+  String get securePayment;
+
+  /// No description provided for @securePaymentDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تتم معالجة بيانات البطاقة بأمان عبر Stripe ولا يحتفظ PETRO B بها.'**
+  String get securePaymentDescription;
 
   /// No description provided for @transactions.
   ///

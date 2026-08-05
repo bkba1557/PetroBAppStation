@@ -21,11 +21,17 @@ dependencies:
   flutter_secure_storage: ^10.3.1
   flutter_svg: ^2.2.3
   go_router: ^17.3.0
+  google_maps_flutter: ^2.18.0
+  geolocator: ^14.0.3
   intl: 0.20.2
   json_annotation: ^4.12.0
   mobile_scanner: ^7.4.0
   package_info_plus: ^10.2.1
+  # 3.13.0 currently resolves xml 7 with incompatible SVG/image APIs.
+  pdf: 3.12.0
+  printing: 5.14.3
   shared_preferences: ^2.5.5
+  url_launcher: ^6.3.2
   uuid: ^4.6.0
 
 dev_dependencies:
@@ -44,6 +50,7 @@ flutter:
     - assets/branding/logo.png
     - assets/branding/app_icon.png
     - assets/branding/saudi_riyal_symbol.svg
+    - assets/fonts/NotoSansArabic.ttf
 
 flutter_launcher_icons:
   android: false

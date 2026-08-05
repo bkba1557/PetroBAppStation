@@ -6,25 +6,28 @@ import 'package:nnexoris_customer/app/router/app_router.dart';
 import 'package:nnexoris_customer/app/theme/app_theme.dart';
 import 'package:nnexoris_customer/app/theme/theme_controller.dart';
 import 'package:nnexoris_customer/l10n/generated/app_localizations.dart';
+import 'package:nnexoris_customer/shared/widgets/location_permission_gate.dart';
 
 class NnexorisApp extends ConsumerWidget {
   const NnexorisApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        onGenerateTitle: (context) => AppLocalizations.of(context).appName,
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        themeMode: ref.watch(themeModeProvider),
-        locale: ref.watch(localeProvider),
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        routerConfig: ref.watch(appRouterProvider),
-      );
+    debugShowCheckedModeBanner: false,
+    onGenerateTitle: (context) => AppLocalizations.of(context).appName,
+    theme: AppTheme.light(),
+    darkTheme: AppTheme.dark(),
+    themeMode: ref.watch(themeModeProvider),
+    locale: ref.watch(localeProvider),
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: const [
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    builder: (context, child) =>
+        LocationPermissionGate(child: child ?? const SizedBox.shrink()),
+    routerConfig: ref.watch(appRouterProvider),
+  );
 }

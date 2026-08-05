@@ -13,6 +13,9 @@ if (keystorePropertiesFile.exists()) {
 val releaseRequested = gradle.startParameter.taskNames.any {
     it.contains("release", ignoreCase = true)
 }
+val googleMapsApiKey = System.getenv("GOOGLE_MAPS_ANDROID_API_KEY")
+    ?: providers.gradleProperty("GOOGLE_MAPS_ANDROID_API_KEY").orNull
+    ?: ""
 if (releaseRequested && !keystorePropertiesFile.exists()) {
     throw GradleException(
         "Production release signing requires android/key.properties and a private keystore.",
@@ -38,10 +41,11 @@ android {
 
     defaultConfig {
         applicationId = "com.nnexoris.customer"
-        minSdk = maxOf(flutter.minSdkVersion, 21)
+        minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = googleMapsApiKey
     }
 
     signingConfigs {

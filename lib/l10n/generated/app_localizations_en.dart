@@ -112,6 +112,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSearchResults => 'No matching results';
 
   @override
+  String get stationsMap => 'Stations map';
+
+  @override
+  String get navigateToStation => 'Directions';
+
+  @override
+  String get availableFuel => 'Available fuel';
+
+  @override
+  String distanceKm(String distance) {
+    return '$distance km';
+  }
+
+  @override
+  String arrivalMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get routeUnavailable => 'Route information unavailable';
+
+  @override
+  String get locationPermissionMessage =>
+      'Enable location to see distance and arrival time';
+
+  @override
+  String get poweredByGoogle => 'Route data powered by Google';
+
+  @override
+  String get stationSearchHint => 'Station, address, or company';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterNearest => 'Nearest';
+
+  @override
+  String get filterCompanies => 'Companies';
+
+  @override
+  String get enableLocation => 'Enable location';
+
+  @override
+  String get locationPermissionTitle => 'Find the right station faster';
+
+  @override
+  String get locationPermissionReason =>
+      'Allow location access to show your driving distance, estimated arrival time, nearby stations, and navigation. Your location is used only for these features and is not shared without your permission.';
+
+  @override
+  String get allowLocation => 'Allow location';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get openSettings => 'Open settings';
+
+  @override
+  String get locationSettingsReason =>
+      'Location services are turned off. Open device settings to enable them.';
+
+  @override
   String get fuelingAvailable => 'Fueling is available';
 
   @override
@@ -172,6 +236,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fuelGasoline95 => 'Gasoline 95';
 
   @override
+  String get fuelGasoline98 => 'Gasoline 98';
+
+  @override
   String get fuelDiesel => 'Diesel';
 
   @override
@@ -188,6 +255,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get topUp => 'Top up';
+
+  @override
+  String get topUpTitle => 'Add money to your wallet';
+
+  @override
+  String get topUpSubtitle =>
+      'Choose an amount and complete your payment securely';
+
+  @override
+  String get chooseTopUpAmount => 'Choose an amount';
+
+  @override
+  String get customAmount => 'Or enter a custom amount';
+
+  @override
+  String get amountInSar => 'Amount in SAR';
+
+  @override
+  String get continueToPayment => 'Continue to payment';
+
+  @override
+  String get securePayment => 'Secure payment';
+
+  @override
+  String get securePaymentDescription =>
+      'Card details are handled securely by Stripe and are never stored by PETRO B.';
 
   @override
   String get transactions => 'Transactions';

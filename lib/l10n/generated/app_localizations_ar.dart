@@ -109,6 +109,70 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noSearchResults => 'لا توجد نتائج مطابقة';
 
   @override
+  String get stationsMap => 'خريطة المحطات';
+
+  @override
+  String get navigateToStation => 'الذهاب للمحطة';
+
+  @override
+  String get availableFuel => 'الوقود المتوفر';
+
+  @override
+  String distanceKm(String distance) {
+    return '$distance كم';
+  }
+
+  @override
+  String arrivalMinutes(int minutes) {
+    return '$minutes دقيقة';
+  }
+
+  @override
+  String get routeUnavailable => 'بيانات الطريق غير متاحة';
+
+  @override
+  String get locationPermissionMessage =>
+      'فعّل الموقع لمعرفة المسافة ووقت الوصول';
+
+  @override
+  String get poweredByGoogle => 'بيانات الطريق مقدمة من Google';
+
+  @override
+  String get stationSearchHint => 'المحطة أو العنوان أو الشركة';
+
+  @override
+  String get filterAll => 'الكل';
+
+  @override
+  String get filterNearest => 'الأقرب';
+
+  @override
+  String get filterCompanies => 'الشركات';
+
+  @override
+  String get enableLocation => 'تفعيل الموقع';
+
+  @override
+  String get locationPermissionTitle => 'اعثر على المحطة المناسبة أسرع';
+
+  @override
+  String get locationPermissionReason =>
+      'اسمح بالوصول إلى موقعك لعرض مسافة القيادة ووقت الوصول والمحطات الأقرب وتشغيل الملاحة. يُستخدم موقعك لهذه المزايا فقط ولا تتم مشاركته دون إذنك.';
+
+  @override
+  String get allowLocation => 'السماح بالموقع';
+
+  @override
+  String get notNow => 'ليس الآن';
+
+  @override
+  String get openSettings => 'فتح الإعدادات';
+
+  @override
+  String get locationSettingsReason =>
+      'خدمة الموقع مغلقة. افتح إعدادات الجهاز لتفعيلها.';
+
+  @override
   String get fuelingAvailable => 'التعبئة متاحة';
 
   @override
@@ -166,6 +230,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fuelGasoline95 => 'بنزين 95';
 
   @override
+  String get fuelGasoline98 => 'بنزين 98';
+
+  @override
   String get fuelDiesel => 'ديزل';
 
   @override
@@ -182,6 +249,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get topUp => 'شحن الرصيد';
+
+  @override
+  String get topUpTitle => 'أضف رصيدًا إلى محفظتك';
+
+  @override
+  String get topUpSubtitle => 'اختر المبلغ وأكمل الدفع بأمان';
+
+  @override
+  String get chooseTopUpAmount => 'اختر مبلغ الشحن';
+
+  @override
+  String get customAmount => 'أو أدخل مبلغًا مخصصًا';
+
+  @override
+  String get amountInSar => 'المبلغ بالريال';
+
+  @override
+  String get continueToPayment => 'المتابعة إلى الدفع';
+
+  @override
+  String get securePayment => 'دفع آمن';
+
+  @override
+  String get securePaymentDescription =>
+      'تتم معالجة بيانات البطاقة بأمان عبر Stripe ولا يحتفظ PETRO B بها.';
 
   @override
   String get transactions => 'المعاملات';

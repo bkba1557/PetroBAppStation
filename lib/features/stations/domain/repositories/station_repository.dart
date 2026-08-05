@@ -18,6 +18,10 @@ abstract interface class StationRepository {
   Future<Station> getStation(String stationId);
   Future<List<FuelPrice>> getFuelPrices(String stationId);
   Future<StationAvailability> getAvailability(String stationId);
+  Future<Map<String, StationRouteMetrics>> getRouteMetrics(
+    GeoPosition origin,
+    List<String> stationIds,
+  );
 }
 
 class GeoPosition {
@@ -26,7 +30,14 @@ class GeoPosition {
   final double longitude;
 }
 
+enum LocationAccessStatus { granted, denied, deniedForever, serviceDisabled }
+
 abstract interface class LocationService {
-  /// Returns null when permission is denied or location is unavailable.
+  Future<LocationAccessStatus> accessStatus();
+  Future<LocationAccessStatus> requestAccess();
+  Future<bool> openAppSettings();
+  Future<bool> openLocationSettings();
+
+  /// Returns null unless the customer has explicitly granted access.
   Future<GeoPosition?> currentLocation();
 }

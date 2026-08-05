@@ -1,13 +1,64 @@
-from flask import current_app, jsonify
+import json
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
+from flask import current_app, jsonify, request
 from sqlalchemy import select
 
 from app.extensions import get_session
+from app.maps.routes import _server_key
 from app.models import Company, EdgeDevice, FuelPrice, Location, Nozzle, Pump, Station, utcnow
+from payment_network_security import resolve_public_addresses
 
 from . import customer_api
 from .common import api_error
 from .fuel_codes import availability_reason, normalize_fuel_code, public_fuel_kind
 from .security import customer_required
+
+
+ROUTES_API_HOST = "routes.googleapis.com"
+ROUTE_MATRIX_FIELD_MASK = (
+    "originIndex,destinationIndex,status,condition,distanceMeters,duration"
+)
+
+
+def _duration_seconds(value):
+    raw = str(value or "0s")
+    if not raw.endswith("s"):
+        return 0
+    try:
+        return max(0, round(float(raw[:-1])))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _compute_route_matrix(origin, destinations, api_key):
+    resolve_public_addresses(ROUTES_API_HOST, 443)
+    body = {
+        "origins": [{"waypoint": {"location": {"latLng": origin}}}],
+        "destinations": [
+            {"waypoint": {"location": {"latLng": coordinates}}}
+            for coordinates in destinations
+        ],
+        "travelMode": "DRIVE",
+        "routingPreference": "TRAFFIC_AWARE",
+        "languageCode": "ar",
+        "regionCode": "SA",
+    }
+    google_request = Request(
+        f"https://{ROUTES_API_HOST}/distanceMatrix/v2:computeRouteMatrix",
+        data=json.dumps(body).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": api_key,
+            "X-Goog-FieldMask": ROUTE_MATRIX_FIELD_MASK,
+        },
+        method="POST",
+    )
+    with urlopen(google_request, timeout=10) as response:
+        if response.status != 200:
+            raise RuntimeError("google_routes_failed")
+        return json.loads(response.read(2_000_000).decode("utf-8"))
 
 
 def _scheduled(station, now):
@@ -137,6 +188,10 @@ def _station_json(db, station):
     return {
         "id": station.station_id,
         "name": station.name_ar or station.name_en,
+        "companyId": str(company.id) if company else "",
+        "companyName": (company.name_ar or company.name_en) if company else "",
+        "companyNameAr": company.name_ar if company else "",
+        "companyNameEn": company.name_en if company else "",
         "logoUrl": station.logo,
         "location": {
             "latitude": float(location.latitude)
@@ -206,6 +261,99 @@ def station_detail(station_id):
     return jsonify(_station_json(db, station))
 
 
+@customer_api.post("/stations/route-matrix")
+@customer_required
+def station_route_matrix():
+    payload = request.get_json(silent=True) or {}
+    origin = payload.get("origin") or {}
+    try:
+        latitude = float(origin["latitude"])
+        longitude = float(origin["longitude"])
+    except (KeyError, TypeError, ValueError):
+        return api_error("INVALID_ORIGIN", 400)
+    if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+        return api_error("INVALID_ORIGIN", 400)
+
+    requested_ids = payload.get("stationIds") or []
+    if not isinstance(requested_ids, list) or not requested_ids:
+        return jsonify({"routes": [], "provider": "google"})
+    station_ids = list(dict.fromkeys(str(value) for value in requested_ids))
+    if len(station_ids) > 25:
+        return api_error("TOO_MANY_STATIONS", 400)
+
+    db = get_session()
+    stations = db.scalars(
+        _visible_station_query().where(Station.station_id.in_(station_ids))
+    ).all()
+    grouped = {}
+    for station in stations:
+        location = db.scalar(
+            select(Location).where(
+                Location.entity_type == "station",
+                Location.entity_id == station.id,
+                Location.deleted_at.is_(None),
+                Location.status == "active",
+                Location.latitude.is_not(None),
+                Location.longitude.is_not(None),
+            )
+        )
+        if location is None:
+            continue
+        grouped.setdefault(station.company_id, []).append((station, location))
+
+    routes = []
+    failed = False
+    for company_id, entries in grouped.items():
+        api_key = _server_key(db, company_id)
+        if not api_key:
+            failed = True
+            continue
+        destinations = [
+            {
+                "latitude": float(location.latitude),
+                "longitude": float(location.longitude),
+            }
+            for _, location in entries
+        ]
+        try:
+            matrix = _compute_route_matrix(
+                {"latitude": latitude, "longitude": longitude},
+                destinations,
+                api_key,
+            )
+        except (HTTPError, URLError, TimeoutError, RuntimeError, ValueError):
+            current_app.logger.exception("Google Routes route-matrix failed")
+            failed = True
+            continue
+        for element in matrix:
+            index = element.get("destinationIndex")
+            if (
+                not isinstance(index, int)
+                or index < 0
+                or index >= len(entries)
+                or element.get("condition") != "ROUTE_EXISTS"
+                or (element.get("status") or {}).get("code", 0) != 0
+            ):
+                continue
+            station, _ = entries[index]
+            routes.append(
+                {
+                    "stationId": station.station_id,
+                    "distanceMeters": int(element.get("distanceMeters", 0)),
+                    "durationSeconds": _duration_seconds(element.get("duration")),
+                }
+            )
+
+    return jsonify(
+        {
+            "routes": routes,
+            "provider": "google",
+            "partial": failed,
+            "attribution": "Powered by Google",
+        }
+    )
+
+
 @customer_api.get("/stations/<station_id>/prices")
 @customer_api.get("/stations/<station_id>/fuel-prices")
 @customer_required
@@ -270,4 +418,3 @@ def station_availability(station_id):
             ],
         }
     )
-

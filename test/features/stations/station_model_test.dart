@@ -14,6 +14,9 @@ Map<String, dynamic> stationJson({
 }) => {
   'id': 'STATION-HAIL-001',
   'name': 'PETRO B Hail Station',
+  'companyId': '7',
+  'companyNameAr': 'شركة بترول ب',
+  'companyNameEn': 'Petro B Company',
   'location': {'latitude': 27.5, 'longitude': 41.7, 'address': 'Hail'},
   'operatingStatus': 'open',
   'fuelPrices': prices,
@@ -48,6 +51,8 @@ void main() {
     final station = Station.fromJson(stationJson());
     expect(station.operatingStatus, StationOperatingStatus.open);
     expect(station.location.latitude, 27.5);
+    expect(station.companyId, '7');
+    expect(station.localizedCompanyName('en'), 'Petro B Company');
     expect(station.availability.stationVisible, isTrue);
     expect(station.selfServiceAvailable, isTrue);
     expect(station.appFuelingAvailable, isFalse);
@@ -68,16 +73,15 @@ void main() {
       ),
     );
     expect(station.appFuelingAvailable, isFalse);
-    expect(
-      station.fuelPrices.map((item) => item.product.code),
-      ['gasoline91', 'gasoline95', 'diesel'],
-    );
+    expect(station.fuelPrices.map((item) => item.product.code), [
+      'gasoline91',
+      'gasoline95',
+      'diesel',
+    ]);
   });
 
   test('Flutter renders only products returned by the API', () {
-    final station = Station.fromJson(
-      stationJson(prices: [priceJson('lpg')]),
-    );
+    final station = Station.fromJson(stationJson(prices: [priceJson('lpg')]));
     expect(station.fuelPrices, hasLength(1));
     expect(station.fuelPrices.single.product.kind, FuelKind.lpg);
   });
@@ -91,6 +95,13 @@ void main() {
     expect(product.localizedName('en'), 'Gasoline 95');
   });
 
+  test('Gasoline 98 is recognized as a distinct available product', () {
+    final product = FuelProduct.fromJson(
+      priceJson('gasoline98')['product'] as Map<String, dynamic>,
+    );
+    expect(product.kind, FuelKind.gasoline98);
+  });
+
   for (final entry in <String, String>{
     'gasoline91': 'gasoline91',
     'gasoline_91': 'gasoline91',
@@ -100,6 +111,8 @@ void main() {
     'gasoline_95': 'gasoline95',
     'GASOLINE_95': 'gasoline95',
     '95': 'gasoline95',
+    '98': 'gasoline98',
+    'GASOLINE_98': 'gasoline98',
     'DIESEL': 'diesel',
     'Kerosene': 'kerosene',
     'LPG': 'lpg',
@@ -120,12 +133,9 @@ void main() {
     'HARDWARE_FUELING_DISABLED':
         StationAvailabilityReason.hardwareFuelingDisabled,
     'EDGE_OFFLINE': StationAvailabilityReason.edgeOffline,
-    'NO_COMPATIBLE_NOZZLE':
-        StationAvailabilityReason.noCompatibleNozzle,
-    'FUEL_PRICE_UNAVAILABLE':
-        StationAvailabilityReason.fuelPriceUnavailable,
-    'SELF_SERVICE_OUTSIDE_SCHEDULE':
-        StationAvailabilityReason.outsideSchedule,
+    'NO_COMPATIBLE_NOZZLE': StationAvailabilityReason.noCompatibleNozzle,
+    'FUEL_PRICE_UNAVAILABLE': StationAvailabilityReason.fuelPriceUnavailable,
+    'SELF_SERVICE_OUTSIDE_SCHEDULE': StationAvailabilityReason.outsideSchedule,
   }.entries) {
     test('maps availability reason ${entry.key}', () {
       expect(availabilityReasonFromJson(entry.key), entry.value);
@@ -146,5 +156,17 @@ void main() {
     expect(pilot.availability.hardwareFuelingEnabled, isFalse);
     expect(active.availability.status, 'ACTIVE');
     expect(active.appFuelingAvailable, isTrue);
+  });
+
+  test('decodes station route metrics', () {
+    final route = StationRouteMetrics.fromJson({
+      'stationId': 'station-1',
+      'distanceMeters': 10750,
+      'durationSeconds': 821.2,
+    });
+
+    expect(route.stationId, 'station-1');
+    expect(route.distanceMeters, 10750);
+    expect(route.durationSeconds, 821);
   });
 }

@@ -3,9 +3,11 @@ import 'package:nnexoris_customer/core/network/api_response.dart';
 import 'package:nnexoris_customer/core/network/http_client.dart';
 import 'package:nnexoris_customer/features/stations/data/station_repository_impl.dart';
 import 'package:nnexoris_customer/features/stations/domain/models/station.dart';
+import 'package:nnexoris_customer/features/stations/domain/repositories/station_repository.dart';
 
 class RecordingHttpClient implements HttpClient {
   final List<(String, Map<String, dynamic>?)> gets = [];
+  final List<(String, Object?)> posts = [];
   var mutationCount = 0;
 
   @override
@@ -59,6 +61,20 @@ class RecordingHttpClient implements HttpClient {
     String? idempotencyKey,
     T Function(Object? json)? decode,
   }) async {
+    if (path.endsWith('/route-matrix')) {
+      posts.add((path, data));
+      return ApiResponse<T>(
+        data: decode!({
+          'routes': [
+            {
+              'stationId': 'station-1',
+              'distanceMeters': 12500,
+              'durationSeconds': 900,
+            },
+          ],
+        }),
+      );
+    }
     mutationCount += 1;
     throw UnimplementedError();
   }
@@ -77,7 +93,10 @@ void main() {
     await repository.getStations();
     await repository.getStations();
     expect(client.gets, hasLength(2));
-    expect(client.gets.every((call) => call.$2!.containsKey('_refresh')), isTrue);
+    expect(
+      client.gets.every((call) => call.$2!.containsKey('_refresh')),
+      isTrue,
+    );
     expect(
       client.gets.first.$2!['_refresh'],
       isNot(client.gets.last.$2!['_refresh']),
@@ -95,5 +114,19 @@ void main() {
       availability.reason,
       StationAvailabilityReason.hardwareFuelingDisabled,
     );
+  });
+
+  test('route matrix sends the origin and decodes Google route data', () async {
+    final client = RecordingHttpClient();
+    final repository = StationRepositoryImpl(client);
+    final routes = await repository.getRouteMetrics(
+      const GeoPosition(latitude: 24.7, longitude: 46.6),
+      const ['station-1'],
+    );
+
+    expect(routes['station-1']?.distanceMeters, 12500);
+    expect(routes['station-1']?.durationSeconds, 900);
+    expect(client.posts.single.$1, 'stations/route-matrix');
+    expect(client.mutationCount, 0);
   });
 }

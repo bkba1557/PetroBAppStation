@@ -6,6 +6,7 @@ import 'package:nnexoris_customer/core/localization/localization_extension.dart'
 import 'package:nnexoris_customer/core/providers.dart';
 import 'package:nnexoris_customer/features/wallet/application/stripe_payment_sheet_service.dart';
 import 'package:nnexoris_customer/features/wallet/domain/models/wallet.dart';
+import 'package:nnexoris_customer/shared/widgets/branded_app_bar_background.dart';
 import 'package:nnexoris_customer/shared/widgets/branded_page_background.dart';
 import 'package:nnexoris_customer/shared/widgets/branded_wallet_card.dart';
 import 'package:uuid/uuid.dart';
@@ -14,13 +15,40 @@ class WalletPage extends ConsumerWidget {
   const WalletPage({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) => Scaffold(
-    backgroundColor: Colors.transparent,
+    backgroundColor: Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF071823)
+        : const Color(0xFFF8FCFB),
     appBar: AppBar(
-      title: Text(
-        context.l10n.wallet,
-        style: const TextStyle(fontWeight: FontWeight.w800),
+      toolbarHeight: 60,
+      foregroundColor: Theme.of(context).colorScheme.primary,
+      title: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: const Icon(Icons.account_balance_wallet_rounded, size: 19),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            context.l10n.wallet,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+        ],
       ),
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF071823)
+          : const Color(0xFFF8FCFB),
+      flexibleSpace: const BrandedAppBarBackground(),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(18)),
+      ),
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
     ),
     body: BrandedPageBackground(
       child: FutureBuilder(
@@ -162,17 +190,23 @@ class _WalletTopUpPageState extends ConsumerState<WalletTopUpPage> {
   final amount = TextEditingController();
   bool busy = false;
   String? message;
+  bool messageIsError = false;
   final presets = const [50.0, 100.0, 200.0, 500.0];
 
   Future<void> submit() async {
     final value = double.tryParse(amount.text);
     if (value == null || value < 1) {
-      setState(() => message = 'أدخل مبلغًا صحيحًا');
+      setState(() {
+        message = 'أدخل مبلغًا صحيحًا';
+        messageIsError = true;
+      });
       return;
     }
+    FocusScope.of(context).unfocus();
     setState(() {
       busy = true;
       message = null;
+      messageIsError = false;
     });
     try {
       final topUp = await ref
@@ -202,7 +236,10 @@ class _WalletTopUpPageState extends ConsumerState<WalletTopUpPage> {
             : 'الدفع قيد التحقق',
       );
     } on Object {
-      setState(() => message = 'تعذر إكمال عملية الدفع');
+      setState(() {
+        message = 'تعذر إكمال عملية الدفع';
+        messageIsError = true;
+      });
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -216,66 +253,331 @@ class _WalletTopUpPageState extends ConsumerState<WalletTopUpPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(context.l10n.topUp)),
-    body: ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        Text('اختر مبلغ الشحن', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 14),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: presets
-              .map(
-                (value) => ChoiceChip(
-                  label: Text('${value.toInt()} SAR'),
-                  selected: amount.text == value.toStringAsFixed(0),
-                  onSelected: (_) =>
-                      setState(() => amount.text = value.toStringAsFixed(0)),
-                ),
-              )
-              .toList(),
-        ),
-        const SizedBox(height: 18),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                TextField(
-                  controller: amount,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+    backgroundColor: Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF071823)
+        : const Color(0xFFF8FCFB),
+    appBar: AppBar(
+      toolbarHeight: 60,
+      foregroundColor: Theme.of(context).colorScheme.primary,
+      title: Text(
+        context.l10n.topUp,
+        style: const TextStyle(fontWeight: FontWeight.w900),
+      ),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF071823)
+          : const Color(0xFFF8FCFB),
+      flexibleSpace: const BrandedAppBarBackground(),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(18)),
+      ),
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+    ),
+    body: BrandedPageBackground(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 34),
+        children: [
+          _TopUpHero(
+            title: context.l10n.topUpTitle,
+            subtitle: context.l10n.topUpSubtitle,
+          ),
+          const SizedBox(height: 18),
+          Text(
+            context.l10n.chooseTopUpAmount,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: presets
+                .map((value) {
+                  final selected = amount.text == value.toStringAsFixed(0);
+                  final colors = Theme.of(context).colorScheme;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsetsDirectional.only(
+                        end: value == presets.last ? 0 : 7,
+                      ),
+                      child: ChoiceChip(
+                        showCheckmark: false,
+                        selectedColor: const Color(0xFF087F6E),
+                        backgroundColor: colors.primaryContainer.withValues(
+                          alpha: 0.72,
+                        ),
+                        side: BorderSide(
+                          color: selected
+                              ? const Color(0xFF087F6E)
+                              : colors.primary.withValues(alpha: 0.24),
+                        ),
+                        labelStyle: TextStyle(
+                          color: selected ? Colors.white : colors.primary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                        label: SizedBox(
+                          width: double.infinity,
+                          child: Text(
+                            '${value.toInt()}',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        selected: selected,
+                        onSelected: (_) => setState(
+                          () => amount.text = value.toStringAsFixed(0),
+                        ),
+                      ),
+                    ),
+                  );
+                })
+                .toList(growable: false),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: 0.55),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.customAmount,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'المبلغ بالريال',
+                  const SizedBox(height: 11),
+                  TextField(
+                    controller: amount,
+                    enabled: !busy,
+                    onChanged: (_) => setState(() {}),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: context.l10n.amountInSar,
+                      prefixIcon: const Icon(Icons.payments_rounded),
+                      suffixText: 'SAR',
+                      suffixStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: busy ? null : submit,
-                  child: busy
-                      ? const CircularProgressIndicator()
-                      : const Text('الدفع التجريبي'),
-                ),
-                if (message != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Text(message!),
+                  if (message != null) ...[
+                    const SizedBox(height: 12),
+                    _PaymentMessage(message: message!, isError: messageIsError),
+                  ],
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: busy ? null : submit,
+                      icon: busy
+                          ? const SizedBox(
+                              width: 19,
+                              height: 19,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                              ),
+                            )
+                          : const Icon(Icons.arrow_forward_rounded),
+                      label: Text(context.l10n.continueToPayment),
+                    ),
                   ),
-              ],
+                ],
+              ),
             ),
           ),
+          const SizedBox(height: 12),
+          _SecurePaymentNote(
+            title: context.l10n.securePayment,
+            description: context.l10n.securePaymentDescription,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _TopUpHero extends StatelessWidget {
+  const _TopUpHero({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        begin: AlignmentDirectional.topStart,
+        end: AlignmentDirectional.bottomEnd,
+        colors: [Color(0xFF087F6E), Color(0xFF16A085)],
+      ),
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF087F6E).withValues(alpha: 0.22),
+          blurRadius: 24,
+          offset: const Offset(0, 10),
         ),
-        const SizedBox(height: 14),
-        const ListTile(
-          leading: Icon(Icons.lock_outline),
-          title: Text('Stripe PaymentSheet · Test Mode'),
-          subtitle: Text('لا تُخزّن بيانات البطاقة داخل NNEXORIS.'),
+      ],
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.17),
+            borderRadius: BorderRadius.circular(17),
+          ),
+          child: const Icon(
+            Icons.add_card_rounded,
+            color: Colors.white,
+            size: 27,
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.84),
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     ),
   );
+}
+
+class _PaymentMessage extends StatelessWidget {
+  const _PaymentMessage({required this.message, required this.isError});
+
+  final String message;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isError
+        ? Theme.of(context).colorScheme.error
+        : const Color(0xFF087F6E);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isError ? Icons.error_outline_rounded : Icons.check_circle_outline,
+            size: 19,
+            color: color,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SecurePaymentNote extends StatelessWidget {
+  const _SecurePaymentNote({required this.title, required this.description});
+
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest.withValues(alpha: 0.52),
+        borderRadius: BorderRadius.circular(17),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: colors.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.lock_rounded, size: 19, color: colors.primary),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          const Text(
+            'Stripe',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class WalletTransactionsPage extends ConsumerWidget {

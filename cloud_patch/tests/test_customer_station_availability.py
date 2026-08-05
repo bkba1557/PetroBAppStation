@@ -14,6 +14,8 @@ from app.customer_api.fuel_codes import availability_reason, normalize_fuel_code
         ("gasoline_95", "gasoline95"),
         ("GASOLINE_95", "gasoline95"),
         ("95", "gasoline95"),
+        ("98", "gasoline98"),
+        ("GASOLINE_98", "gasoline98"),
         ("DIESEL", "diesel"),
         ("Kerosene", "kerosene"),
         ("LPG", "lpg"),
@@ -69,4 +71,3 @@ def test_no_compatible_nozzle_reason():
 
 def test_active_station_with_hardware_is_available():
     assert _reason(status="ACTIVE", hardware_enabled=True) == "AVAILABLE"
-

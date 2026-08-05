@@ -2,7 +2,15 @@ import 'package:equatable/equatable.dart';
 
 enum StationOperatingStatus { open, closed, temporarilyUnavailable, unknown }
 
-enum FuelKind { gasoline91, gasoline95, diesel, kerosene, lpg, other }
+enum FuelKind {
+  gasoline91,
+  gasoline95,
+  gasoline98,
+  diesel,
+  kerosene,
+  lpg,
+  other,
+}
 
 enum StationAvailabilityReason {
   available,
@@ -23,6 +31,7 @@ String normalizeFuelCode(Object? value) {
   return switch (compact) {
     '91' || 'gasoline91' || 'petrol91' => 'gasoline91',
     '95' || 'gasoline95' || 'petrol95' => 'gasoline95',
+    '98' || 'gasoline98' || 'petrol98' => 'gasoline98',
     'diesel' => 'diesel',
     'kerosene' => 'kerosene',
     'lpg' => 'lpg',
@@ -36,6 +45,7 @@ String normalizeFuelCode(Object? value) {
 FuelKind fuelKindForCode(Object? value) => switch (normalizeFuelCode(value)) {
   'gasoline91' => FuelKind.gasoline91,
   'gasoline95' => FuelKind.gasoline95,
+  'gasoline98' => FuelKind.gasoline98,
   'diesel' => FuelKind.diesel,
   'kerosene' => FuelKind.kerosene,
   'lpg' => FuelKind.lpg,
@@ -162,6 +172,28 @@ class StationService extends Equatable {
   List<Object> get props => [code, name];
 }
 
+class StationRouteMetrics extends Equatable {
+  const StationRouteMetrics({
+    required this.stationId,
+    required this.distanceMeters,
+    required this.durationSeconds,
+  });
+
+  final String stationId;
+  final double distanceMeters;
+  final int durationSeconds;
+
+  factory StationRouteMetrics.fromJson(Map<String, dynamic> json) =>
+      StationRouteMetrics(
+        stationId: json['stationId'] as String,
+        distanceMeters: (json['distanceMeters'] as num).toDouble(),
+        durationSeconds: (json['durationSeconds'] as num).round(),
+      );
+
+  @override
+  List<Object> get props => [stationId, distanceMeters, durationSeconds];
+}
+
 class StationAvailability extends Equatable {
   const StationAvailability({
     required this.stationVisible,
@@ -229,6 +261,9 @@ class Station extends Equatable {
     required this.fuelPrices,
     required this.services,
     required this.availability,
+    this.companyId = '',
+    this.companyNameAr = '',
+    this.companyNameEn = '',
     this.logoUrl,
     this.distanceMeters,
     this.operatingHours,
@@ -236,6 +271,9 @@ class Station extends Equatable {
 
   final String id;
   final String name;
+  final String companyId;
+  final String companyNameAr;
+  final String companyNameEn;
   final String? logoUrl;
   final double? distanceMeters;
   final StationLocation location;
@@ -248,11 +286,22 @@ class Station extends Equatable {
   bool get selfServiceAvailable => availability.selfServiceEnabled;
   bool get appFuelingAvailable => availability.appFuelingAvailable;
 
+  String localizedCompanyName(String languageCode) {
+    final preferred = languageCode == 'ar' ? companyNameAr : companyNameEn;
+    final fallback = languageCode == 'ar' ? companyNameEn : companyNameAr;
+    return preferred.isNotEmpty ? preferred : fallback;
+  }
+
   factory Station.fromJson(Map<String, dynamic> json) {
     final operatingStatusName = json['operatingStatus'] as String? ?? 'unknown';
     return Station(
       id: json['id'] as String,
       name: json['name'] as String,
+      companyId: (json['companyId'] ?? '').toString(),
+      companyNameAr: (json['companyNameAr'] ?? json['companyName'] ?? '')
+          .toString(),
+      companyNameEn: (json['companyNameEn'] ?? json['companyName'] ?? '')
+          .toString(),
       logoUrl: json['logoUrl'] as String?,
       distanceMeters: (json['distanceMeters'] as num?)?.toDouble(),
       location: StationLocation.fromJson(
@@ -278,6 +327,9 @@ class Station extends Equatable {
   List<Object?> get props => [
     id,
     name,
+    companyId,
+    companyNameAr,
+    companyNameEn,
     logoUrl,
     distanceMeters,
     location,
