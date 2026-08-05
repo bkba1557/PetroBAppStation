@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:nnexoris_customer/app/router/app_routes.dart';
+import 'package:nnexoris_customer/core/config/app_config.dart';
 import 'package:nnexoris_customer/core/localization/localization_extension.dart';
 import 'package:nnexoris_customer/core/providers.dart';
 import 'package:nnexoris_customer/features/stations/domain/models/station.dart';
@@ -260,7 +261,8 @@ class _StationsPageState extends ConsumerState<StationsPage>
                     onActivate: _requestLocationAccess,
                   ),
                 ),
-              if (filtered.any(_hasCoordinates)) ...[
+              if (ref.read(appConfigProvider).inAppMapsEnabled &&
+                  filtered.any(_hasCoordinates)) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(18, 2, 18, 10),
                   child: Row(

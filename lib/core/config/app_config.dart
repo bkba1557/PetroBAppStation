@@ -14,6 +14,7 @@ class AppConfig {
     required this.connectTimeout,
     required this.receiveTimeout,
     this.requireVerifiedEmailForFueling = false,
+    this.inAppMapsEnabled = true,
   });
 
   factory AppConfig.fromEnvironment() {
@@ -42,17 +43,21 @@ class AppConfig {
       'REQUIRE_VERIFIED_EMAIL_FOR_FUELING',
       defaultValue: false,
     );
+    const inAppMapsEnabled = bool.fromEnvironment(
+      'GOOGLE_MAPS_IOS_ENABLED',
+      defaultValue: true,
+    );
 
     final environment = AppEnvironment.parse(environmentValue);
     final defaults = switch (environment) {
       AppEnvironment.development => (
-          'http://localhost:8080/api/v1/customer/',
-          'ws://localhost:8080/api/v1/customer/realtime',
-        ),
+        'http://localhost:8080/api/v1/customer/',
+        'ws://localhost:8080/api/v1/customer/realtime',
+      ),
       AppEnvironment.production => (
-          'https://customer-api.nnexoris.com/api/v1/customer/',
-          'wss://customer-api.nnexoris.com/api/v1/customer/realtime',
-        ),
+        'https://customer-api.nnexoris.com/api/v1/customer/',
+        'wss://customer-api.nnexoris.com/api/v1/customer/realtime',
+      ),
       AppEnvironment.staging => ('', ''),
     };
     final apiUrl = apiOverride.isEmpty ? defaults.$1 : apiOverride;
@@ -66,6 +71,7 @@ class AppConfig {
       connectTimeout: Duration(seconds: connectSeconds),
       receiveTimeout: Duration(seconds: receiveSeconds),
       requireVerifiedEmailForFueling: requireVerifiedEmail,
+      inAppMapsEnabled: inAppMapsEnabled,
     )..validate();
   }
 
@@ -76,6 +82,7 @@ class AppConfig {
   final Duration connectTimeout;
   final Duration receiveTimeout;
   final bool requireVerifiedEmailForFueling;
+  final bool inAppMapsEnabled;
 
   bool get isProduction => environment == AppEnvironment.production;
 

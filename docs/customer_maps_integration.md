@@ -52,6 +52,11 @@ Both iOS workflows import this group from `codemagic.yaml`. During the build,
 the secret is written to the ignored `ios/Flutter/Maps.xcconfig`; it is never
 committed or printed in build logs.
 
+The key is optional for publishing: when it is absent, Codemagic completes the
+iOS build with the embedded map disabled. Station lists, route distance/time,
+location access, and the external navigation button remain available. Adding
+the secret automatically enables the embedded map on the next build.
+
 For Android builds, expose `GOOGLE_MAPS_ANDROID_API_KEY` as an environment or
 Gradle property.
 

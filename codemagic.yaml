@@ -36,12 +36,13 @@ definitions:
     - name: Install CocoaPods dependencies
       script: |
         if [ -z "${GOOGLE_MAPS_IOS_API_KEY:-}" ]; then
-          echo "Missing GOOGLE_MAPS_IOS_API_KEY."
-          echo "Add it as a Secret in the Codemagic variable group: google_maps_credentials"
-          exit 1
+          echo "Warning: GOOGLE_MAPS_IOS_API_KEY is missing; building with the in-app iOS map disabled."
+          echo "GOOGLE_MAPS_IOS_ENABLED=false" >> "$CM_ENV"
+        else
+          umask 077
+          printf 'GOOGLE_MAPS_IOS_API_KEY=%s\n' "$GOOGLE_MAPS_IOS_API_KEY" > ios/Flutter/Maps.xcconfig
+          echo "GOOGLE_MAPS_IOS_ENABLED=true" >> "$CM_ENV"
         fi
-        umask 077
-        printf 'GOOGLE_MAPS_IOS_API_KEY=%s\n' "$GOOGLE_MAPS_IOS_API_KEY" > ios/Flutter/Maps.xcconfig
         cd ios
         pod install
 
@@ -82,6 +83,7 @@ definitions:
           --build-number="$NEXT_BUILD_NUMBER" \
           --dart-define=APP_ENV="$APP_ENV" \
           --dart-define=ENABLE_LOGGING=false \
+          --dart-define=GOOGLE_MAPS_IOS_ENABLED="${GOOGLE_MAPS_IOS_ENABLED:-false}" \
           --export-options-plist=/Users/builder/export_options.plist
 
         APP_PATH=""
