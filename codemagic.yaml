@@ -77,6 +77,25 @@ definitions:
           --dart-define=ENABLE_LOGGING=false \
           --export-options-plist=/Users/builder/export_options.plist
 
+        APP_PATH=""
+        for candidate in build/ios/archive/*.xcarchive/Products/Applications/*.app; do
+          if [ -d "$candidate" ]; then
+            APP_PATH="$candidate"
+            break
+          fi
+        done
+        if [ -z "$APP_PATH" ]; then
+          echo "Could not locate the archived iOS app."
+          exit 1
+        fi
+
+        ARCHIVE_MINIMUM_OS="$(/usr/libexec/PlistBuddy -c 'Print :MinimumOSVersion' "$APP_PATH/Info.plist")"
+        echo "Archived app MinimumOSVersion: $ARCHIVE_MINIMUM_OS"
+        if [ "$ARCHIVE_MINIMUM_OS" != "15.0" ]; then
+          echo "Invalid archived MinimumOSVersion; expected 15.0."
+          exit 1
+        fi
+
   artifacts: &ios_artifacts
     - build/ios/ipa/*.ipa
     - build/ios/archive/*.xcarchive

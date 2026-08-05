@@ -1,6 +1,6 @@
 # PETRO B iOS release
 
-The iOS application uses bundle identifier `com.nnexoris.customer`, iOS 13.0
+The iOS application uses bundle identifier `com.nnexoris.customer`, iOS 15.0
 as its minimum deployment target, and the production customer API selected by
 `APP_ENV=production`.
 
