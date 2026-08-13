@@ -16,7 +16,7 @@ import 'package:nnexoris_customer/features/qr_scanner/presentation/qr_scanner_pa
 import 'package:nnexoris_customer/features/settings/presentation/settings_page.dart';
 import 'package:nnexoris_customer/features/stations/presentation/stations_page.dart';
 import 'package:nnexoris_customer/features/transactions/presentation/transactions_page.dart';
-import 'package:nnexoris_customer/features/vehicles/presentation/vehicles_page.dart';
+import 'package:nnexoris_customer/features/vehicles/presentation/vehicles_page_clean.dart';
 import 'package:nnexoris_customer/features/wallet/presentation/wallet_pages.dart';
 import 'package:nnexoris_customer/shared/widgets/mobile_navigation_shell.dart';
 

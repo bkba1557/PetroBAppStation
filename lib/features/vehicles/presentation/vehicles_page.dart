@@ -27,6 +27,10 @@ class _VehiclesPageState extends ConsumerState<VehiclesPage> {
 
   Future<void> edit([Vehicle? current]) async {
     final plate = TextEditingController(text: current?.plateNumber);
+    final plateLetter1 = TextEditingController();
+    final plateLetter2 = TextEditingController();
+    final plateLetter3 = TextEditingController();
+    final plateDigits = TextEditingController();
     final name = TextEditingController(text: current?.nickname);
     final model = TextEditingController(text: current?.model);
     var fuel = current?.fuelCode ?? 'unspecified';
@@ -58,9 +62,58 @@ class _VehiclesPageState extends ConsumerState<VehiclesPage> {
                   decoration: const InputDecoration(labelText: 'اسم المركبة'),
                 ),
                 const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: plateLetter1,
+                        textDirection: TextDirection.rtl,
+                        textAlign: TextAlign.center,
+                        maxLength: 1,
+                        decoration: const InputDecoration(
+                          labelText: 'حروف اللوحة',
+                          counterText: '',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: plateLetter2,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        maxLength: 1,
+                        decoration: const InputDecoration(
+                          labelText: 'أرقام اللوحة',
+                          counterText: '',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: plateLetter3,
+                        textDirection: TextDirection.rtl,
+                        textAlign: TextAlign.center,
+                        maxLength: 1,
+                        decoration: const InputDecoration(
+                          labelText: 'Ø­Ø±Ù 3',
+                          counterText: '',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
                 TextField(
-                  controller: plate,
-                  decoration: const InputDecoration(labelText: 'رقم اللوحة'),
+                  controller: plateDigits,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  maxLength: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Ø£Ø±Ù‚Ø§Ù… Ø§Ù„Ù„ÙˆØ­Ø©',
+                    counterText: '',
+                  ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -97,12 +150,28 @@ class _VehiclesPageState extends ConsumerState<VehiclesPage> {
                 const SizedBox(height: 12),
                 FilledButton(
                   onPressed: () {
-                    if (plate.text.trim().isEmpty) return;
+                    final digits = plateDigits.text.trim();
+                    final letters = [
+                      plateLetter1.text.trim(),
+                      plateLetter2.text.trim(),
+                      plateLetter3.text.trim(),
+                    ].where((e) => e.isNotEmpty).join('');
+                    if (digits.isEmpty &&
+                        letters.isEmpty &&
+                        plate.text.trim().isEmpty) {
+                      return;
+                    }
+                    final normalizedPlate = [
+                      digits,
+                      letters,
+                    ].where((e) => e.isNotEmpty).join(' · ');
                     Navigator.pop(
                       sheetContext,
                       Vehicle(
                         id: current?.id ?? '',
-                        plateNumber: plate.text.trim(),
+                        plateNumber: normalizedPlate.isEmpty
+                            ? plate.text.trim()
+                            : normalizedPlate,
                         registrationNumber: current?.registrationNumber ?? '',
                         nickname: name.text.trim(),
                         model: model.text.trim(),
@@ -121,6 +190,10 @@ class _VehiclesPageState extends ConsumerState<VehiclesPage> {
     );
 
     plate.dispose();
+    plateLetter1.dispose();
+    plateLetter2.dispose();
+    plateLetter3.dispose();
+    plateDigits.dispose();
     name.dispose();
     model.dispose();
 
@@ -174,13 +247,7 @@ class _VehiclesPageState extends ConsumerState<VehiclesPage> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 26,
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer,
-                        child: const Icon(Icons.directions_car),
-                      ),
+                      _SaudiPlate(plate: vehicle.plateNumber),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
@@ -262,6 +329,37 @@ class _VehiclesPageState extends ConsumerState<VehiclesPage> {
           ),
         );
       },
+    ),
+  );
+}
+
+class _SaudiPlate extends StatelessWidget {
+  const _SaudiPlate({required this.plate});
+  final String plate;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 118,
+    height: 66,
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/branding/saudi_license_plate.png',
+          fit: BoxFit.fill,
+        ),
+        Center(
+          child: Text(
+            plate,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
     ),
   );
 }
