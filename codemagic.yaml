@@ -55,6 +55,9 @@ definitions:
         set -euo pipefail
 
         PUBSPEC_BUILD_NUMBER="$(grep '^version:' pubspec.yaml | sed -nE 's/.*\+([0-9]+)$/\1/p')"
+        # Keep a floor above the last App Store Connect build observed for this app.
+        # This protects releases when the App Store Connect lookup is temporarily unavailable.
+        MIN_IOS_BUILD_NUMBER="${MIN_IOS_BUILD_NUMBER:-20260805170516}"
         LATEST_TESTFLIGHT_BUILD_NUMBER="$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || true)"
         LATEST_APP_STORE_BUILD_NUMBER="$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || true)"
 
@@ -73,6 +76,13 @@ definitions:
         else
           # Safe fallback when App Store Connect is temporarily unavailable.
           NEXT_BUILD_NUMBER="$(date -u +%Y%m%d%H%M%S)"
+          if echo "$PUBSPEC_BUILD_NUMBER" | grep -Eq '^[0-9]+$' && [ "$PUBSPEC_BUILD_NUMBER" -gt "$NEXT_BUILD_NUMBER" ]; then
+            NEXT_BUILD_NUMBER="$PUBSPEC_BUILD_NUMBER"
+          fi
+        fi
+
+        if [ "$NEXT_BUILD_NUMBER" -le "$MIN_IOS_BUILD_NUMBER" ]; then
+          NEXT_BUILD_NUMBER=$((MIN_IOS_BUILD_NUMBER + 1))
         fi
 
         echo "Latest TestFlight build: ${LATEST_TESTFLIGHT_BUILD_NUMBER:-not found}"
