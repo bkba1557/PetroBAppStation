@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:moyasar/moyasar.dart';
 import 'package:nnexoris_customer/features/wallet/domain/models/wallet.dart'
@@ -15,7 +17,7 @@ class MoyasarCheckoutService {
         builder: (_) => _MoyasarCardPage(
           amount: topUp.amount,
           publishableKey: key,
-          description: 'NNEXORIS Wallet Top Up ${topUp.id}',
+          description: 'PETRO B APP Wallet Top Up ${topUp.id}',
         ),
       ),
     );
@@ -40,6 +42,17 @@ class _MoyasarCardPage extends StatelessWidget {
       currency: 'SAR',
       description: description,
       creditCard: CreditCardConfig(saveCard: false, manual: false),
+      applePay: Platform.isIOS
+          ? ApplePayConfig(
+              merchantId: const String.fromEnvironment(
+                'APPLE_PAY_MERCHANT_ID',
+                defaultValue: 'merchant.com.petrob.app',
+              ),
+              label: 'PETRO B APP',
+              manual: false,
+              saveCard: false,
+            )
+          : null,
       supportedNetworks: const [
         PaymentNetwork.mada,
         PaymentNetwork.visa,
@@ -93,26 +106,22 @@ class _MoyasarCardPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            if (Platform.isIOS) ...[
+              ApplePay(
+                config: config,
+                onPaymentResult: (result) => _handle(context, result),
+              ),
+              const SizedBox(height: 12),
+              const Center(child: Text('أو ادفع بالبطاقة البنكية')),
+              const SizedBox(height: 12),
+            ],
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: CreditCard(
                   config: config,
                   locale: const Localization.ar(),
-                  onPaymentResult: (result) {
-                    if (result is PaymentResponse &&
-                        (result.status == PaymentStatus.paid ||
-                            result.status == PaymentStatus.authorized ||
-                            result.status == PaymentStatus.captured)) {
-                      Navigator.of(context).pop(result.id);
-                    } else if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('تعذر إتمام الدفع عبر Moyasar'),
-                        ),
-                      );
-                    }
-                  },
+                  onPaymentResult: (result) => _handle(context, result),
                 ),
               ),
             ),
@@ -120,5 +129,18 @@ class _MoyasarCardPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _handle(BuildContext context, dynamic result) {
+    if (result is PaymentResponse &&
+        (result.status == PaymentStatus.paid ||
+            result.status == PaymentStatus.authorized ||
+            result.status == PaymentStatus.captured)) {
+      Navigator.of(context).pop(result.id);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذر إتمام الدفع عبر Moyasar')),
+      );
+    }
   }
 }
