@@ -18,6 +18,7 @@ class MoyasarCheckoutService {
           amount: topUp.amount,
           publishableKey: key,
           description: 'PETRO B APP Wallet Top Up ${topUp.id}',
+          topUpId: topUp.id,
         ),
       ),
     );
@@ -29,10 +30,12 @@ class _MoyasarCardPage extends StatelessWidget {
     required this.amount,
     required this.publishableKey,
     required this.description,
+    required this.topUpId,
   });
   final double amount;
   final String publishableKey;
   final String description;
+  final String topUpId;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +44,7 @@ class _MoyasarCardPage extends StatelessWidget {
       amount: (amount * 100).round(),
       currency: 'SAR',
       description: description,
+      metadata: {'topup_id': topUpId},
       creditCard: CreditCardConfig(saveCard: false, manual: false),
       applePay: Platform.isIOS
           ? ApplePayConfig(

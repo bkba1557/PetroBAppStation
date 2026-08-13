@@ -46,12 +46,18 @@ class WalletRepositoryImpl implements WalletRepository {
       )).data;
 
   @override
-  Future<void> completeTopUp(String topUpId, String paymentId) async {
+  Future<void> completeTopUp(
+    String topUpId,
+    String paymentId,
+    String? checkoutToken,
+  ) async {
     await _client.post<void>(
       '${ApiEndpoints.walletTopUps}/$topUpId/complete',
-      data: {'payment_id': paymentId},
+      data: {
+        'payment_id': paymentId,
+        if (checkoutToken != null) 'token': checkoutToken,
+      },
       decode: (_) {},
     );
   }
-
 }

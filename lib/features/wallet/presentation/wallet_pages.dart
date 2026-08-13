@@ -218,7 +218,9 @@ class _WalletTopUpPageState extends ConsumerState<WalletTopUpPage> {
       if (!mounted) return;
       final paymentId = await MoyasarCheckoutService().present(context, topUp);
       if (paymentId != null && mounted) {
-        await ref.read(walletRepositoryProvider).completeTopUp(topUp.id, paymentId);
+        await ref
+            .read(walletRepositoryProvider)
+            .completeTopUp(topUp.id, paymentId, topUp.checkoutToken);
       }
       // PaymentSheet completion is not financial proof. The webhook updates
       // the ledger; this GET only reconciles the trusted server state.

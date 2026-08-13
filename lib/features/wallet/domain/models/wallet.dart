@@ -35,19 +35,25 @@ class WalletBalance extends Equatable {
   final int version;
 
   factory WalletBalance.fromJson(Map<String, dynamic> json) => WalletBalance(
-        available: (json['available'] as num).toDouble(),
-        reserved: (json['reserved'] as num).toDouble(),
-        currency: json['currency'] as String,
-        version: json['version'] as int,
-      );
+    available: (json['available'] as num).toDouble(),
+    reserved: (json['reserved'] as num).toDouble(),
+    currency: json['currency'] as String,
+    version: json['version'] as int,
+  );
 
   @override
   List<Object> get props => [available, reserved, currency, version];
 }
 
 class Wallet extends Equatable {
-  const Wallet({required this.id, required this.balance, required this.totalCredited,
-    required this.totalSpent, required this.totalRefunded, required this.updatedAt});
+  const Wallet({
+    required this.id,
+    required this.balance,
+    required this.totalCredited,
+    required this.totalSpent,
+    required this.totalRefunded,
+    required this.updatedAt,
+  });
   final String id;
   final WalletBalance balance;
   final double totalCredited;
@@ -56,15 +62,25 @@ class Wallet extends Equatable {
   final DateTime updatedAt;
 
   factory Wallet.fromJson(Map<String, dynamic> json) => Wallet(
-        id: json['id'] as String,
-        balance: WalletBalance.fromJson(json['balance'] as Map<String, dynamic>),
-        totalCredited: ((json['summary'] as Map?)?['totalCredited'] as num? ?? 0).toDouble(),
-        totalSpent: ((json['summary'] as Map?)?['totalSpent'] as num? ?? 0).toDouble(),
-        totalRefunded: ((json['summary'] as Map?)?['totalRefunded'] as num? ?? 0).toDouble(),
-        updatedAt: DateTime.parse(json['updatedAt'] as String),
-      );
+    id: json['id'] as String,
+    balance: WalletBalance.fromJson(json['balance'] as Map<String, dynamic>),
+    totalCredited: ((json['summary'] as Map?)?['totalCredited'] as num? ?? 0)
+        .toDouble(),
+    totalSpent: ((json['summary'] as Map?)?['totalSpent'] as num? ?? 0)
+        .toDouble(),
+    totalRefunded: ((json['summary'] as Map?)?['totalRefunded'] as num? ?? 0)
+        .toDouble(),
+    updatedAt: DateTime.parse(json['updatedAt'] as String),
+  );
   @override
-  List<Object> get props => [id, balance, totalCredited, totalSpent, totalRefunded, updatedAt];
+  List<Object> get props => [
+    id,
+    balance,
+    totalCredited,
+    totalSpent,
+    totalRefunded,
+    updatedAt,
+  ];
 }
 
 class WalletTransaction extends Equatable {
@@ -117,6 +133,7 @@ class WalletTopUp extends Equatable {
     this.clientSecret,
     this.publishableKey,
     this.paymentIntentId,
+    this.checkoutToken,
   });
   final String id;
   final double amount;
@@ -125,32 +142,39 @@ class WalletTopUp extends Equatable {
   final String? clientSecret;
   final String? publishableKey;
   final String? paymentIntentId;
+  final String? checkoutToken;
 
   factory WalletTopUp.fromJson(Map<String, dynamic> json) => WalletTopUp(
-        id: json['id'] as String,
-        amount: (json['amount'] as num).toDouble(),
-        status: WalletTopUpStatus.values.byName(json['status'] as String),
-        paymentRedirectUrl: json['paymentRedirectUrl'] == null
-            ? null
-            : Uri.parse(json['paymentRedirectUrl'] as String),
-        clientSecret: json['clientSecret'] as String?,
-        publishableKey: json['publishableKey'] as String?,
-        paymentIntentId: json['paymentIntentId'] as String?,
-      );
+    id: json['id'] as String,
+    amount: (json['amount'] as num).toDouble(),
+    status: WalletTopUpStatus.values.byName(json['status'] as String),
+    paymentRedirectUrl: json['paymentRedirectUrl'] == null
+        ? null
+        : Uri.parse(json['paymentRedirectUrl'] as String),
+    clientSecret: json['clientSecret'] as String?,
+    publishableKey: json['publishableKey'] as String?,
+    paymentIntentId: json['paymentIntentId'] as String?,
+    checkoutToken: json['checkoutToken'] as String?,
+  );
   @override
   List<Object?> get props => [
-        id,
-        amount,
-        status,
-        paymentRedirectUrl,
-        clientSecret,
-        publishableKey,
-        paymentIntentId,
-      ];
+    id,
+    amount,
+    status,
+    paymentRedirectUrl,
+    clientSecret,
+    publishableKey,
+    paymentIntentId,
+    checkoutToken,
+  ];
 }
 
 class PaymentMethod extends Equatable {
-  const PaymentMethod({required this.id, required this.type, required this.label});
+  const PaymentMethod({
+    required this.id,
+    required this.type,
+    required this.label,
+  });
   final String id;
   final String type;
   final String label;
