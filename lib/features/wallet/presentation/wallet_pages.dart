@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nnexoris_customer/app/router/app_routes.dart';
+import 'package:nnexoris_customer/core/formatters/currency.dart';
 import 'package:nnexoris_customer/core/localization/localization_extension.dart';
 import 'package:nnexoris_customer/core/providers.dart';
-import 'package:nnexoris_customer/features/wallet/application/stripe_payment_sheet_service.dart';
+import 'package:nnexoris_customer/features/wallet/application/moyasar_checkout_service.dart';
 import 'package:nnexoris_customer/features/wallet/domain/models/wallet.dart';
 import 'package:nnexoris_customer/shared/widgets/branded_app_bar_background.dart';
 import 'package:nnexoris_customer/shared/widgets/branded_page_background.dart';
@@ -66,10 +67,8 @@ class WalletPage extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(18, 8, 18, 108),
             children: [
               BrandedWalletCard(
-                available:
-                    '${balance.available.toStringAsFixed(2)} ${balance.currency}',
-                reserved:
-                    '${balance.reserved.toStringAsFixed(2)} ${balance.currency}',
+                available: balance.available,
+                reserved: balance.reserved,
                 onTopUp: () => context.push(AppRoutes.walletTopUp),
               ),
               const SizedBox(height: 14),
@@ -140,7 +139,7 @@ class WalletPage extends ConsumerWidget {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'الرصيد محسوب من سجل مالي غير قابل للتعديل. لا يتم اعتماد الشحن إلا بعد Webhook موثّق من Stripe.',
+                        'الرصيد محسوب من سجل مالي غير قابل للتعديل. لا يتم اعتماد الشحن إلا بعد تحقق آمن من Moyasar.',
                         style: TextStyle(fontSize: 11, height: 1.5),
                       ),
                     ],
@@ -169,7 +168,7 @@ class _WalletMetric extends StatelessWidget {
           Text(label, style: Theme.of(context).textTheme.labelSmall),
           const SizedBox(height: 4),
           Text(
-            '${value.toStringAsFixed(2)} SAR',
+            formatSaudiRiyal(value),
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -216,7 +215,11 @@ class _WalletTopUpPageState extends ConsumerState<WalletTopUpPage> {
             paymentMethodId: 'payment_sheet',
             idempotencyKey: const Uuid().v4(),
           );
-      await StripePaymentSheetService().present(topUp);
+      if (!mounted) return;
+      final paymentId = await MoyasarCheckoutService().present(context, topUp);
+      if (paymentId != null && mounted) {
+        await ref.read(walletRepositoryProvider).completeTopUp(topUp.id, paymentId);
+      }
       // PaymentSheet completion is not financial proof. The webhook updates
       // the ledger; this GET only reconciles the trusted server state.
       var verified = await ref
@@ -224,7 +227,7 @@ class _WalletTopUpPageState extends ConsumerState<WalletTopUpPage> {
           .getTopUp(topUp.id);
       for (
         var attempt = 0;
-        attempt < 10 && verified.status != WalletTopUpStatus.paid;
+        attempt < 30 && verified.status != WalletTopUpStatus.paid;
         attempt += 1
       ) {
         await Future<void>.delayed(const Duration(seconds: 2));
@@ -366,10 +369,9 @@ class _WalletTopUpPageState extends ConsumerState<WalletTopUpPage> {
                     decoration: InputDecoration(
                       labelText: context.l10n.amountInSar,
                       prefixIcon: const Icon(Icons.payments_rounded),
-                      suffixText: 'SAR',
-                      suffixStyle: TextStyle(
+                      suffix: SaudiRiyalMark(
+                        size: 19,
                         color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
@@ -571,7 +573,7 @@ class _SecurePaymentNote extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           const Text(
-            'Stripe',
+            'Moyasar',
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
           ),
         ],

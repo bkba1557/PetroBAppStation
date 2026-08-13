@@ -24,7 +24,8 @@ if (releaseRequested && !keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.nnexoris.customer"
-    compileSdk = flutter.compileSdkVersion
+    // Moyasar's Android dependencies require API 34+ at compile time.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     // flutter_stripe's optional Tap-and-Pay lint dependency is no longer

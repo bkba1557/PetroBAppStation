@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nnexoris_customer/core/formatters/currency.dart';
 
 class BrandedWalletCard extends StatelessWidget {
   const BrandedWalletCard({
@@ -9,8 +10,8 @@ class BrandedWalletCard extends StatelessWidget {
     this.updatedLabel,
   });
 
-  final String available;
-  final String reserved;
+  final num available;
+  final num reserved;
   final String? updatedLabel;
   final VoidCallback onTopUp;
 
@@ -110,17 +111,22 @@ class BrandedWalletCard extends StatelessWidget {
               style: TextStyle(color: Color(0xFFCCEEE5), fontSize: 12),
             ),
             const SizedBox(height: 2),
-            Text(
-              available,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                height: 1.15,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  available.toStringAsFixed(2),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    height: 1.15,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(width: 7),
+                const SaudiRiyalMark(size: 26, color: Colors.white),
+              ],
             ),
             const SizedBox(height: 14),
             Row(

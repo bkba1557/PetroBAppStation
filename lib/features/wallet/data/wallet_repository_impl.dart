@@ -44,4 +44,14 @@ class WalletRepositoryImpl implements WalletRepository {
         '${ApiEndpoints.walletTopUps}/$topUpId',
         decode: (json) => WalletTopUp.fromJson(json as Map<String, dynamic>),
       )).data;
+
+  @override
+  Future<void> completeTopUp(String topUpId, String paymentId) async {
+    await _client.post<void>(
+      '${ApiEndpoints.walletTopUps}/$topUpId/complete',
+      data: {'payment_id': paymentId},
+      decode: (_) {},
+    );
+  }
+
 }

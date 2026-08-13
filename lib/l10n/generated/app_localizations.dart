@@ -581,7 +581,7 @@ abstract class AppLocalizations {
   /// No description provided for @amountInSar.
   ///
   /// In ar, this message translates to:
-  /// **'المبلغ بالريال'**
+  /// **'المبلغ بالريال السعودي'**
   String get amountInSar;
 
   /// No description provided for @continueToPayment.
@@ -599,7 +599,7 @@ abstract class AppLocalizations {
   /// No description provided for @securePaymentDescription.
   ///
   /// In ar, this message translates to:
-  /// **'تتم معالجة بيانات البطاقة بأمان عبر Stripe ولا يحتفظ PETRO B بها.'**
+  /// **'تتم معالجة بيانات البطاقة بأمان عبر Moyasar ولا يحتفظ التطبيق ببياناتها.'**
   String get securePaymentDescription;
 
   /// No description provided for @transactions.

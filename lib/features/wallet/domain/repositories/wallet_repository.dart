@@ -9,4 +9,5 @@ abstract interface class WalletRepository {
     required String idempotencyKey,
   });
   Future<WalletTopUp> getTopUp(String topUpId);
+  Future<void> completeTopUp(String topUpId, String paymentId);
 }

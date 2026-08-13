@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nnexoris_customer/app/router/app_routes.dart';
+import 'package:nnexoris_customer/core/formatters/currency.dart';
 import 'package:nnexoris_customer/core/localization/localization_extension.dart';
 import 'package:nnexoris_customer/core/providers.dart';
 import 'package:nnexoris_customer/features/fueling/domain/models/fueling_session.dart';
@@ -332,7 +333,7 @@ class _FuelingSetupPageState extends ConsumerState<FuelingSetupPage> {
                                     .primaryContainer
                                     .withValues(alpha: .62),
                                 label: Text(
-                                  '$value SAR',
+                                  formatSaudiRiyal(value),
                                   style: TextStyle(
                                     color: Theme.of(
                                       context,
@@ -364,8 +365,8 @@ class _FuelingSetupPageState extends ConsumerState<FuelingSetupPage> {
                               : const Color(0xFFEAF8F3),
                           labelText: _text(
                             context,
-                            'المبلغ المطلوب (SAR)',
-                            'Requested amount (SAR)',
+                            'المبلغ المطلوب ($saudiRiyalSymbol)',
+                            'Requested amount ($saudiRiyalSymbol)',
                           ),
                           prefixIcon: const Icon(Icons.payments_outlined),
                         ),
@@ -639,13 +640,13 @@ class _FuelingProgressPageState extends ConsumerState<FuelingProgressPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '${_text(context, 'المبلغ المصروف', 'Dispensed amount')}: ${session.dispensedAmount.toStringAsFixed(2)} SAR',
+              '${_text(context, 'المبلغ المصروف', 'Dispensed amount')}: ${formatSaudiRiyal(session.dispensedAmount)}',
             ),
             Text(
               '${_text(context, 'الكمية', 'Volume')}: ${session.dispensedVolume.toStringAsFixed(3)} L',
             ),
             Text(
-              '${_text(context, 'المبلغ المحجوز', 'Reserved amount')}: ${session.reservedAmount.toStringAsFixed(2)} SAR',
+              '${_text(context, 'المبلغ المحجوز', 'Reserved amount')}: ${formatSaudiRiyal(session.reservedAmount)}',
             ),
             const SizedBox(height: 20),
             if (session.status == FuelingSessionStatus.fundsHeld)

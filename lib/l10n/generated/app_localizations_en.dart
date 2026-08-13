@@ -270,7 +270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customAmount => 'Or enter a custom amount';
 
   @override
-  String get amountInSar => 'Amount in SAR';
+  String get amountInSar => 'Amount in Saudi Riyal';
 
   @override
   String get continueToPayment => 'Continue to payment';
@@ -280,7 +280,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securePaymentDescription =>
-      'Card details are handled securely by Stripe and are never stored by PETRO B.';
+      'Card details are handled securely by Moyasar and are never stored by the app.';
 
   @override
   String get transactions => 'Transactions';

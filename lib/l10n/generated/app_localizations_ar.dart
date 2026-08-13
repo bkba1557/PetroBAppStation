@@ -263,7 +263,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customAmount => 'أو أدخل مبلغًا مخصصًا';
 
   @override
-  String get amountInSar => 'المبلغ بالريال';
+  String get amountInSar => 'المبلغ بالريال السعودي';
 
   @override
   String get continueToPayment => 'المتابعة إلى الدفع';
@@ -273,7 +273,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get securePaymentDescription =>
-      'تتم معالجة بيانات البطاقة بأمان عبر Stripe ولا يحتفظ PETRO B بها.';
+      'تتم معالجة بيانات البطاقة بأمان عبر Moyasar ولا يحتفظ التطبيق ببياناتها.';
 
   @override
   String get transactions => 'المعاملات';

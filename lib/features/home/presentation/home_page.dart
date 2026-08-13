@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:nnexoris_customer/app/router/app_routes.dart';
+import 'package:nnexoris_customer/core/formatters/currency.dart';
 import 'package:nnexoris_customer/core/providers.dart';
 import 'package:nnexoris_customer/features/home/domain/dashboard.dart';
 import 'package:nnexoris_customer/shared/widgets/branded_page_background.dart';
@@ -103,7 +104,7 @@ class _DashboardBody extends StatelessWidget {
   final String period;
   final ValueChanged<String> onPeriod;
   final VoidCallback onCustom;
-  String money(Object? v) => '${(v as num? ?? 0).toStringAsFixed(2)} SAR';
+  String money(Object? v) => formatSaudiRiyal(v as num? ?? 0);
   @override
   Widget build(BuildContext context) {
     final name = dashboard.customer['name'] as String? ?? '';
@@ -126,8 +127,8 @@ class _DashboardBody extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         BrandedWalletCard(
-          available: money(dashboard.wallet['available']),
-          reserved: money(dashboard.wallet['held']),
+          available: (dashboard.wallet['available'] as num? ?? 0),
+          reserved: (dashboard.wallet['held'] as num? ?? 0),
           updatedLabel:
               'آخر تحديث ${_shortDate(dashboard.wallet['updatedAt'])}',
           onTopUp: () => context.push(AppRoutes.walletTopUp),
